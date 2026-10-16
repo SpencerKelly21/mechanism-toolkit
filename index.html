@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#12304a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/theme.css">
 <style>
 .plate{position:relative;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;border:2px solid var(--ink);padding:30px 28px 24px}
@@ -16,15 +16,12 @@
 .kick,.sec{font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--mute)}
 .plate::after{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#3a86ff,#2ec4b6,#ffd23f,var(--belt))}
 .plate header{margin:0}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:center;margin:10px 0 30px}
-@media (max-width:760px){.hero{grid-template-columns:1fr}}
-.hero h1{font-size:clamp(44px,8vw,78px);line-height:.95;text-transform:uppercase;letter-spacing:.02em;margin:0 0 16px}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:24px;align-items:center;margin:10px 0 30px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}#hero{justify-self:center}}
+.hero h1{font-family:"Chakra Petch","Barlow Semi Condensed",system-ui,sans-serif;font-size:clamp(30px,4.6vw,46px);line-height:1.05;text-transform:uppercase;letter-spacing:.06em;margin:0 0 16px}
 .hero h1::after{content:"";display:block;width:84px;height:6px;background:var(--belt);margin-top:14px}
 .lede{font-size:17px;max-width:44ch;margin:0 0 14px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;list-style:none}
-.chips li{--c:var(--belt);border:1.5px solid var(--ink);border-left:6px solid var(--c);background:var(--panel);padding:3px 10px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-#hero{width:100%;height:auto}
-#hero text{font:600 5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.12em;fill:var(--mute);text-anchor:middle}
+#hero{width:100%;max-width:400px;height:auto;justify-self:end}
 .sec{border-bottom:2px solid var(--belt);padding-bottom:6px;margin:0 0 16px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
 .tile{--c:var(--belt);display:flex;flex-direction:column;gap:6px;padding:14px;background:var(--panel);background:color-mix(in srgb,var(--c) 13%,var(--panel));border:1.5px solid var(--ink);border-top:6px solid var(--c);color:var(--ink);text-decoration:none;transition:transform .15s,box-shadow .15s}
@@ -40,16 +37,18 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 .tb div{border:1.5px solid var(--ink);margin-left:-1.5px;padding:4px 12px;font-weight:700;background:var(--panel)}
 .tb .hl{background:var(--belt);color:var(--paper)}
 .tb .hl span{color:inherit;opacity:.85}
-.chips li:nth-child(2){--c:#3a86ff}
-.chips li:nth-child(3){--c:#2ec4b6}
 .tb span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
 .spin{animation:cw var(--t) linear infinite}
 .spinr{animation:ccw var(--t) linear infinite}
-.slide{animation:slide 1s linear infinite}
+.rk{animation:rk 3s linear infinite alternate}
+.rp{animation:rp 3s linear infinite alternate}
+.tile .spin,.tile .rk,.tile .rp{animation-play-state:paused}
+.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp{animation-play-state:running}
 @keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
 @keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
-@keyframes slide{to{transform:translateX(-9.42px)}}
-@media (prefers-reduced-motion:reduce){.spin,.spinr,.slide{animation:none}}
+@keyframes rk{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
+@keyframes rp{from{transform:rotate(61.35deg)}to{transform:rotate(118.65deg)}}
+@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}}
 </style>
 </head>
 <body>
@@ -60,9 +59,8 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <div>
 <h1>Mechanism<br>Toolkit</h1>
 <p class="lede">Belts, gears and linkages you can drag, spin and size. Every page starts as pure geometry and adds a physics mode when you want forces, torques and safety factors.</p>
-<ul class="chips"><li>Live geometry</li><li>Physics mode</li><li>Four themes</li></ul>
 </div>
-<svg id="hero" viewBox="-42 -58 176 120" role="img" aria-label="Two spur gears meshing and turning"></svg>
+<svg id="hero" viewBox="-28 -38 124 76" role="img" aria-label="Two spur gears meshing and turning"></svg>
 </section>
 <h2 class="sec">Contents</h2>
 <div class="tiles">
@@ -79,15 +77,16 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <script src="shared/ui.js"></script>
 <script>
 const TAU = 2 * Math.PI, byId = id => document.getElementById(id);
-// Decorative spur-gear outline (trapezoid teeth, 20° flanks), centred on the origin.
+// Involute spur-gear outline centred on the origin, tooth 0 on +x. Teeth are 8% thinner than the gap pitch for backlash.
 function gearD(z, m) {
-  const r = m * z / 2, p = Math.PI * m, t = Math.tan(Math.PI / 9), rr = r - 1.25 * m, ro = r + m;
-  const aR = (p / 4 + 1.25 * m * t) / rr, aT = (p / 4 - m * t) / ro;
+  const al = Math.PI / 9, r = m * z / 2, rb = r * Math.cos(al), ra = r + m, rf = r - 1.25 * m, inv = a => Math.tan(a) - a, iA = inv(al);
+  const half = q => Math.max(0, .92 * Math.PI / (2 * z) - (inv(Math.acos(Math.min(1, rb / q))) - iA));
+  const r0 = Math.max(rb, rf), fl = [];
+  for (let i = 0; i <= 6; i++) { const q = r0 + (ra - r0) * i / 6; fl.push([q, half(q)]); }
+  const root = rf < rb ? [[rf, half(rb)]] : [];
+  const tooth = [...root.map(([q, a]) => [q, -a]), ...fl.map(([q, a]) => [q, -a]), ...fl.slice().reverse(), ...root];
   let d = "";
-  for (let k = 0; k < z; k++) {
-    const c = TAU * k / z;
-    [[rr, c - aR], [ro, c - aT], [ro, c + aT], [rr, c + aR]].forEach(([q, a], i) => d += (k + i ? "L" : "M") + (q * Math.cos(a)).toFixed(2) + " " + (q * Math.sin(a)).toFixed(2));
-  }
+  for (let k = 0; k < z; k++) tooth.forEach(([q, a], i) => { const t = a + TAU * k / z; d += (k + i ? "L" : "M") + (q * Math.cos(t)).toFixed(2) + " " + (q * Math.sin(t)).toFixed(2); });
   return d + "Z";
 }
 // Closed belt outline around two circles [x, y, r].
@@ -100,21 +99,23 @@ function hull(a, b) {
 const spin = (x, y, t, a0, inner, cls = "spin") => `<g transform="translate(${x},${y})"><g class="${cls}" style="--a0:${a0}deg;--t:${t}s">${inner}</g></g>`;
 const line = "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'";
 
-// Hero: gear 12T drives gear 18T, so the speeds must stay in the ratio 18 : 12.
-const g1 = gearD(12, 5), g2 = gearD(18, 5);
-const gear = (d, r, c) => `<path d="${d}" fill="${c}" fill-opacity=".3" stroke="${c}" stroke-width="1.2" stroke-linejoin="round"/><circle r="${r}" fill="none" stroke="${c}" stroke-width=".9"/><line x1="0" y1="0" x2="${r * 2.2}" y2="0" stroke="var(--label)" stroke-width="1.2" stroke-linecap="round"/>`;
+// Hero: 14T drives 21T (module 3), so the speeds stay in the ratio 21 : 14. Slow on purpose.
+const gear = (d, r, c) => `<path d="${d}" fill="${c}" fill-opacity=".3" stroke="${c}" stroke-width=".9" stroke-linejoin="round"/><circle r="${r}" fill="none" stroke="${c}" stroke-width=".7"/><line x1="0" y1="0" x2="${r * 2.2}" y2="0" stroke="var(--label)" stroke-width=".9" stroke-linecap="round"/>`;
 byId("hero").innerHTML =
-  `<g stroke="var(--mute)" stroke-width=".4" stroke-dasharray="6 1.5 1 1.5"><line x1="-42" y1="0" x2="134" y2="0"/><line x1="0" y1="-42" x2="0" y2="42"/><line x1="75" y1="-56" x2="75" y2="56"/></g>` +
-  spin(0, 0, 12, 0, gear(g1, 6, "var(--belt)")) + spin(75, 0, 18, 180 + 10, gear(g2, 8, "#3a86ff"), "spinr") +
-  `<circle r="30" fill="none" stroke="var(--belt)" stroke-width=".6" stroke-dasharray="3 2"/><circle cx="75" r="45" fill="none" stroke="var(--belt)" stroke-width=".6" stroke-dasharray="3 2"/>` +
-  `<text x="0" y="48">12 TEETH</text><text x="75" y="57">18 TEETH</text><text x="37.5" y="-47">RATIO 1.5 : 1</text>`;
+  `<g stroke="var(--mute)" stroke-width=".3" stroke-dasharray="4 1 1 1"><line x1="-28" y1="0" x2="96" y2="0"/><line x1="0" y1="-30" x2="0" y2="30"/><line x1="52.5" y1="-38" x2="52.5" y2="38"/></g>` +
+  spin(0, 0, 40, 0, gear(gearD(14, 3), 4, "var(--belt)")) + spin(52.5, 0, 60, 180 + 180 / 21, gear(gearD(21, 3), 5, "#3a86ff"), "spinr") +
+  `<circle r="21" fill="none" stroke="var(--belt)" stroke-width=".4" stroke-dasharray="2 1.5"/><circle cx="52.5" r="31.5" fill="none" stroke="var(--belt)" stroke-width=".4" stroke-dasharray="2 1.5"/>`;
 
 const ICONS = {
-  belt: () => `<path d="${hull([18, 38, 10], [46, 30, 14])}" ${line}/>` + spin(18, 38, 5, 0, `<line x1="-7" y1="0" x2="7" y2="0" ${line}/>`) + spin(46, 30, 7, 0, `<line x1="-10" y1="0" x2="10" y2="0" ${line}/>`),
+  belt: () => `<path d="${hull([18, 38, 10], [46, 30, 14])}" ${line}/><circle cx="18" cy="38" r="6.5" ${line}/><circle cx="46" cy="30" r="10.5" ${line}/>` + spin(18, 38, 6, 0, `<line x1="-6.5" y1="0" x2="6.5" y2="0" ${line}/><circle r="1.5" ${line}/>`) + spin(46, 30, 8, 0, `<line x1="-10.5" y1="0" x2="10.5" y2="0" ${line}/><circle r="2" ${line}/>`),
   rack: () => {
-    let d = "";
-    for (let k = -3; k <= 4; k++) { const c = 24 + 4.71 + k * 9.42; d += `${k === -3 ? "M" : "L"}${c - 3.1} 41.75L${c - 1.6} 35L${c + 1.6} 35L${c + 3.1} 41.75`; }
-    return `<g class="slide"><path d="${d}L80 47L-20 47Z" ${line}/></g>` + spin(24, 26, 8, 90, `<path d="${gearD(8, 3)}" ${line}/><circle r="3" ${line}/>`);
+    // module 3: pitch 9.42, 20° flanks, tooth 8% thin; pitch line y = 38, tips y = 35, roots y = 41.75, base y = 47
+    const p = Math.PI * 3, t = Math.tan(Math.PI / 9), hp = .92 * p / 4, w = h => hp - h * t;
+    let d = "", first = 32 + p / 2 - 3 * p;
+    d += `M${first - w(-3.75)} 47V41.75`;
+    for (let k = -3; k <= 2; k++) { const c = 32 + p / 2 + k * p; d += `L${c - w(-3.75)} 41.75L${c - w(3)} 35H${c + w(3)}L${c + w(-3.75)} 41.75`; }
+    d += `V47Z`;
+    return `<g class="rk"><path d="${d}" ${line} stroke-linejoin="miter"/></g><g transform="translate(32,26)"><g class="rp"><path d="${gearD(8, 3)}" ${line}/><circle r="3" ${line}/></g></g>`;
   },
   screw: () => `<rect x="10" y="24" width="40" height="16" ${line}/><path d="M18 24l6 16M26 24l6 16M34 24l6 16M42 24l6 16" ${line}/><rect x="28" y="16" width="12" height="32" ${line}/>`,
   four: () => `<path d="M10 52L22 18L46 24L54 52" ${line}/><path d="M6 52h12M50 52h12" ${line}/><g fill="var(--panel)"><circle cx="10" cy="52" r="3" ${line}/><circle cx="22" cy="18" r="3" ${line}/><circle cx="46" cy="24" r="3" ${line}/><circle cx="54" cy="52" r="3" ${line}/></g>`,
