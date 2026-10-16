@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rack and Pinion Calculator</title>
+<meta name="description" content="Interactive rack and pinion calculator with animated involute meshing: gear geometry, contact ratio, undercut check, forces, motor torque, bending and contact stress.">
+<meta name="theme-color" content="#12304a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/theme.css">
+<style>svg{display:block;width:100%;height:auto;aspect-ratio:4/3}</style>
+</head>
+<body>
+<main>
+<header>
+<h1><a class="back" href="index.html" aria-label="All mechanisms">←</a> Rack and Pinion</h1>
+<div class="grp">
+<div class="pair"><b>Mode</b><div class="seg" role="radiogroup" aria-label="Mode">
+<label><input type="radio" name="mode" value="geo" checked><span>Geometry</span></label>
+<label><input type="radio" name="mode" value="phys"><span>Physics</span></label>
+</div></div>
+<div id="themeSlot"></div>
+</div>
+</header>
+
+<div class="layout">
+<div>
+<div class="sheet"><svg id="svg" role="img" aria-label="Rack and pinion mesh"></svg></div>
+<div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="360" step="0.5" value="0" aria-label="Pinion angle"><span id="angv"></span></div>
+<p class="note">Orange dashed: pitch circle. Gray: base circle. Diagonal: line of action, tangent to the base circle at the pitch point.</p>
+</div>
+<div class="card">
+<div class="read">
+<div class="big"><small>Rack travel per pinion revolution</small><b id="trev">–</b></div>
+<div><small>Pitch diameter</small><b id="dp">–</b></div>
+<div><small>Contact ratio</small><b id="eps">–</b></div>
+</div>
+<div class="pgrid g2">
+<label>Module m (mm)<input type="number" id="m" value="2" step="0.25" min="0.1" max="50"></label>
+<label>Pinion teeth z<input type="number" id="z" value="20" step="1" min="6" max="300"></label>
+<label>Pressure angle α (°)<select id="alpha"><option>14.5</option><option selected>20</option><option>25</option></select></label>
+<label>Face width b (mm)<input type="number" id="b" value="15" step="any" min="0.1" max="500"></label>
+<label>Travel needed (mm)<input type="number" id="travel" value="300" step="any" min="0" max="5000"></label>
+</div>
+<div id="gwarn"></div>
+<table class="res"><tbody id="gres"></tbody></table>
+</div>
+</div>
+
+<div class="card" id="phys" hidden style="margin-top:16px">
+<h2>Physics</h2>
+<div class="pwrap">
+<div class="pgrid">
+<label>Solve for<select id="solve"><option value="T">Torque needed for a load</option><option value="F">Force available from a motor</option></select></label>
+<label>Pinion speed (RPM)<input type="number" id="rpm" value="120" step="any" min="0" max="5000"></label>
+<label>Material (both parts)<select id="mat"><option value="steel">Steel, hardened</option><option value="pom">Acetal (POM)</option></select></label>
+<label id="lm">Moved mass (kg)<input type="number" id="mass" value="5" step="any" min="0" max="1000"></label>
+<label id="la">Acceleration (m/s²)<input type="number" id="acc" value="2" step="any" min="0" max="100"></label>
+<label id="li">Incline angle (°)<input type="number" id="inc" value="0" step="any" min="0" max="90"></label>
+<label id="lf">Guide friction μ<input type="number" id="mf" value="0.1" step="0.05" min="0" max="1"></label>
+<label id="le">External force (N)<input type="number" id="fext" value="0" step="any" min="0" max="100000"></label>
+<label id="lt" hidden>Motor torque (N·m)<input type="number" id="tm" value="1" step="any" min="0" max="1000"></label>
+<label>Gear ratio (motor : pinion)<input type="number" id="gr" value="1" step="any" min="0.01" max="1000"></label>
+<label>Efficiency (%)<input type="number" id="eta" value="95" step="any" min="0" max="100"></label>
+<label>Allowable bending (MPa)<input type="number" id="sb" value="200" step="any" min="1" max="2000"></label>
+<label>Allowable contact (MPa)<input type="number" id="sh" value="800" step="any" min="1" max="3000"></label>
+<label>Modulus E (GPa)<input type="number" id="ym" value="206" step="any" min="0.1" max="500"></label>
+<label>Poisson ν<input type="number" id="nu" value="0.3" step="0.05" min="0" max="0.5"></label>
+<label>Motor steps per rev<input type="number" id="spr" value="200" step="1" min="1" max="10000"></label>
+<label>Microsteps<input type="number" id="us" value="16" step="1" min="1" max="256"></label>
+<label>Mount error Δc (mm)<input type="number" id="dc" value="0.05" step="any" min="0" max="5"></label>
+</div>
+<div class="pout"><div id="pwarn"></div><table class="res"><tbody id="pres"></tbody></table></div>
+</div>
+<p class="note">A sizing estimate, not a certification. Material values are placeholders: use your supplier's datasheet, and apply AGMA or ISO 6336 factors for a final design.</p>
+<details class="how"><summary>Formulas used</summary><ul>
+<li>Force along the rack F = T / r, where r is the pitch radius. Separating force F<sub>r</sub> = F·tanα. Normal force F<sub>n</sub> = F / cosα.</li>
+<li>Load force F = m(a + g·sinθ + μg·cosθ) + external. Motor torque = F·r / (G·η).</li>
+<li>Lewis bending stress σ = F·K<sub>v</sub> / (b·m·Y), with K<sub>v</sub> = (6.1 + v) / 6.1 and Y from the 20° form-factor table.</li>
+<li>Hertz contact stress σ<sub>H</sub> = √(F<sub>n</sub>·E* / (π·b·r·sinα)), with E* = E / (2(1 − ν²)) for two equal materials.</li>
+<li>Resolution = π·m·z / (steps × microsteps × G). Added backlash from mount error ≈ 2·Δc·tanα.</li>
+<li>Contact ratio ε = [√(r<sub>a</sub>² − r<sub>b</sub>²) − r·sinα + m / sinα] / (π·m·cosα). Undercut limit z ≥ 2 / sin²α.</li>
+</ul></details>
+</div>
+</main>
+
+<script src="shared/ui.js"></script>
+<script>
+const svg = $("svg");
+let G = null, theta = 0, last = 0, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+const MAT = { steel: { ym: 206, nu: .3, sb: 200, sh: 800 }, pom: { ym: 3, nu: .35, sb: 35, sh: 30 } };
+const LEWIS = [[12,.245],[13,.261],[14,.277],[15,.290],[16,.296],[17,.303],[18,.309],[19,.314],[20,.322],[21,.328],[22,.331],[24,.337],[26,.346],[28,.353],[30,.359],[34,.371],[38,.384],[45,.399],[50,.408],[60,.421],[75,.434],[100,.447],[150,.460],[300,.472]];
+function lewisY(z) {
+  if (z <= 12) return .245;
+  for (let i = 1; i < LEWIS.length; i++) if (z <= LEWIS[i][0]) { const [a, ya] = LEWIS[i - 1], [b, yb] = LEWIS[i]; return ya + (yb - ya) * (z - a) / (b - a); }
+  return .472;
+}
+
+function geom() {
+  const m = val("m"), z = Math.round(val("z")), al = +$("alpha").value * Math.PI / 180, b = val("b"), tr = val("travel");
+  if (!(m > 0) || !(z >= 6) || !(b > 0) || !(tr >= 0)) return null;
+  const d = m * z, r = d / 2, ra = r + m, rf = r - 1.25 * m, rb = r * Math.cos(al), p = Math.PI * m;
+  const eps = (Math.sqrt(ra * ra - rb * rb) - r * Math.sin(al) + m / Math.sin(al)) / (p * Math.cos(al));
+  return { m, z, al, b, tr, d, r, ra, rf, rb, p, eps, zmin: 2 / Math.sin(al) ** 2 };
+}
+
+// Involute tooth outline (mm, SVG y-down), tooth 0 centred on the +x axis.
+function pinionPath(g) {
+  const { z, al, ra, rf, rb } = g, inv = a => Math.tan(a) - a, iA = inv(al);
+  const half = r => Math.max(0, Math.PI / (2 * z) - (inv(Math.acos(Math.min(1, rb / r))) - iA));
+  const r0 = Math.max(rb, rf), flank = [];
+  for (let i = 0; i <= 8; i++) { const r = r0 + (ra - r0) * i / 8; flank.push([r, half(r)]); }
+  const root = rf < rb ? [[rf, half(rb)]] : [];
+  const tooth = [...root.map(([r, a]) => [r, -a]), ...flank.map(([r, a]) => [r, -a]), ...flank.slice().reverse(), ...root];
+  let d = "";
+  for (let k = 0; k < z; k++) {
+    const A = TP * k / z;
+    tooth.forEach(([r, a], i) => { const t = a + A; d += (k + i ? "L" : "M") + (r * Math.cos(t)).toFixed(3) + " " + (-r * Math.sin(t)).toFixed(3); });
+  }
+  return d + "Z";
+}
+
+// Straight-flanked rack teeth, tips pointing up at the pinion; a gap is centred under x = 0.
+function rackPath(g, W) {
+  const { m, al, r, p } = g, t = Math.tan(al), yT = r - m, yR = r + 1.25 * m, yB = yR + 2 * m;
+  const K = Math.ceil(W / p) + 2, a = p / 4 - m * t, b = p / 4 + 1.25 * m * t;
+  let d = "";
+  for (let k = -K; k <= K; k++) {
+    const c = p / 2 + k * p;
+    d += `${k === -K ? "M" : "L"}${c - b} ${yR}L${c - a} ${yT}L${c + a} ${yT}L${c + b} ${yR}`;
+  }
+  return d + `L${p * (K + 1.5)} ${yB}L${-p * (K + .5)} ${yB}Z`;
+}
+
+function draw() {
+  const g = G, { m, r, ra, rb, al } = g;
+  const top = -(ra + m), h = ra + m + r + 3.6 * m, S = h * 4 / 3, u = S / 150, k = r * .12;
+  svg.setAttribute("viewBox", `${-S / 2} ${top} ${S} ${h}`);
+  const L = 3 * m;
+  svg.innerHTML =
+    `<g id="rackG"><path d="${rackPath(g, S / 2)}" fill="var(--ifill)" stroke="var(--edge)" stroke-width="${u * .4}" stroke-linejoin="round"/></g>` +
+    `<g id="pinG"><path d="${pinionPath(g)}" fill="var(--fill)" stroke="var(--edge)" stroke-width="${u * .4}" stroke-linejoin="round"/><circle r="${r * .22}" fill="none" stroke="var(--edge)" stroke-width="${u * .3}"/><line x1="0" y1="0" x2="${r * .7}" y2="0" stroke="var(--label)" stroke-width="${u * .5}" stroke-linecap="round"/></g>` +
+    `<circle r="${r}" fill="none" stroke="var(--belt)" stroke-width="${u * .35}" stroke-dasharray="${u * 2} ${u * 1.2}"/>` +
+    `<circle r="${rb}" fill="none" stroke="var(--mute)" stroke-width="${u * .3}"/>` +
+    `<line x1="${-S / 2}" y1="${r}" x2="${S / 2}" y2="${r}" stroke="var(--belt)" stroke-width="${u * .3}" stroke-dasharray="${u * 2} ${u * 1.2}"/>` +
+    `<line x1="${-L * Math.cos(al)}" y1="${r - L * Math.sin(al)}" x2="${L * Math.cos(al)}" y2="${r + L * Math.sin(al)}" stroke="var(--label)" stroke-width="${u * .4}"/>` +
+    `<circle cx="0" cy="${r}" r="${u * .9}" fill="var(--belt)"/>` +
+    `<path d="M${-k} 0H${k}M0 ${-k}V${k}" stroke="var(--label)" stroke-width="${u * .3}"/>`;
+  apply();
+}
+
+// Pinion turns counter-clockwise by theta; the rack moves +x by r*theta.
+function apply() {
+  if (!G) return;
+  const rad = theta * Math.PI / 180;
+  const pg = $("pinG"), rg = $("rackG");
+  if (pg) pg.setAttribute("transform", `rotate(${90 - theta})`);
+  if (rg) rg.setAttribute("transform", `translate(${(G.r * rad) % G.p} 0)`);
+  $("angv").textContent = `${fmt(theta, 0)}°, rack ${fmt(G.r * rad, 2)} mm`;
+}
+function setAngle(deg) { theta = ((deg % 360) + 360) % 360; $("ang").value = theta; apply(); }
+function setPlaying(on) { playing = on; $("play").textContent = on ? "Pause" : "Play"; }
+
+function physics(g) {
+  const nv = id => parseFloat($(id).value), T = $("solve").value === "T";
+  ["lm", "la", "li", "lf", "le"].forEach(i => $(i).hidden = !T); $("lt").hidden = T;
+  const ids = ["rpm", "gr", "eta", "sb", "sh", "ym", "nu", "spr", "us", "dc"].concat(T ? ["mass", "acc", "inc", "mf", "fext"] : ["tm"]);
+  if (ids.some(id => !(nv(id) >= 0)) || nv("gr") <= 0 || nv("spr") <= 0 || nv("us") <= 0 || nv("ym") <= 0 || nv("sb") <= 0 || nv("sh") <= 0) {
+    $("pwarn").innerHTML = '<div class="pw">Enter a number in every field. Ratio, steps, modulus and allowables must be above zero.</div>';
+    $("pres").innerHTML = ""; return;
+  }
+  const r = g.r / 1000, G = nv("gr"), eta = Math.min(100, nv("eta")) / 100, nu = Math.min(.5, nv("nu"));
+  let F, Tp, Tm;
+  if (T) { const th = nv("inc") * Math.PI / 180; F = nv("mass") * (nv("acc") + 9.81 * Math.sin(th) + nv("mf") * 9.81 * Math.cos(th)) + nv("fext"); Tp = F * r; Tm = Tp / (G * eta); }
+  else { Tm = nv("tm"); Tp = Tm * G * eta; F = Tp / r; }
+  const v = Math.PI * g.d / 1000 * nv("rpm") / 60;
+  const Fr = F * Math.tan(g.al), Fn = F / Math.cos(g.al);
+  const sB = F * (6.1 + v) / 6.1 / (g.b * g.m * lewisY(g.z));
+  const sH = Math.sqrt(Fn * (nv("ym") * 1000 / (2 * (1 - nu * nu))) / (Math.PI * g.b * g.r * Math.sin(g.al)));
+  const fb = nv("sb") / sB, fh = nv("sh") / sH, sf = x => isFinite(x) ? fmt(x, 1) : "∞";
+  const W = [];
+  if (fb < 1) W.push("Pinion tooth bending stress exceeds the allowable."); else if (fb < 1.5) W.push("Low bending safety factor. Aim for 1.5 or more.");
+  if (fh < 1) W.push("Contact stress exceeds the allowable."); else if (fh < 1.5) W.push("Low contact safety factor. Aim for 1.5 or more.");
+  if (g.z < 12) W.push("Lewis form factor is extrapolated below 12 teeth.");
+  $("pwarn").innerHTML = W.length ? W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No warnings.</div>';
+  const rows = [
+    ["Tangential force on rack F", fmt(F) + " N"],
+    ["Pinion torque", fmt(Tp, 3) + " N·m"],
+    ["Motor torque", fmt(Tm, 3) + " N·m"],
+    ["Rack speed / power", fmt(v, 3) + " m/s / " + fmt(F * v, 1) + " W"],
+    ["Separating force Fr / normal Fn", fmt(Fr, 1) + " / " + fmt(Fn, 1) + " N"],
+    ["Bending stress / safety factor", fmt(sB, 1) + " MPa / " + sf(fb)],
+    ["Contact stress / safety factor", fmt(sH, 1) + " MPa / " + sf(fh)],
+    ["Resolution per microstep", fmt(Math.PI * g.m * g.z / (nv("spr") * nv("us") * G), 4) + " mm"],
+    ["Backlash added by mount error", fmt(2 * nv("dc") * Math.tan(g.al), 3) + " mm"]
+  ];
+  $("pres").innerHTML = rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+}
+
+function update() {
+  $("phys").hidden = document.querySelector("input[name=mode]:checked").value !== "phys";
+  G = geom();
+  if (!G) {
+    svg.innerHTML = "";
+    ["trev", "dp", "eps"].forEach(i => $(i).textContent = "–");
+    $("gres").innerHTML = "";
+    $("gwarn").innerHTML = '<div class="pw">Enter a positive module, face width and travel, and at least 6 teeth.</div>';
+    return;
+  }
+  const g = G, deg = Math.round(g.al * 180 / Math.PI * 10) / 10, nTeeth = Math.ceil(g.tr / g.p) + 2;
+  $("trev").textContent = fmt(Math.PI * g.d, 2) + " mm";
+  $("dp").textContent = fmt(g.d, 2) + " mm";
+  $("eps").textContent = fmt(g.eps, 2);
+  const W = [];
+  if (g.z < Math.ceil(g.zmin)) W.push(`Undercut risk: ${g.z} teeth is below the ${Math.ceil(g.zmin)} needed at ${deg}°. Add teeth or use profile shift.`);
+  if (g.eps < 1.2) W.push("Contact ratio is below 1.2, so the mesh may not hand off smoothly between teeth.");
+  $("gwarn").innerHTML = W.length ? W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No geometry warnings.</div>';
+  const rows = [
+    ["Tip diameter", fmt(2 * g.ra) + " mm"], ["Root diameter", fmt(2 * g.rf) + " mm"], ["Base diameter", fmt(2 * g.rb) + " mm"],
+    ["Circular pitch", fmt(g.p, 3) + " mm"], ["Whole depth", fmt(2.25 * g.m) + " mm"],
+    ["Rack for travel", nTeeth + " teeth, " + fmt(nTeeth * g.p, 1) + " mm"], ["Minimum teeth, no undercut", Math.ceil(g.zmin)]
+  ];
+  $("gres").innerHTML = rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+  draw();
+  if (!$("phys").hidden) physics(g);
+}
+
+const TIPS = {
+  m: "Module is tooth size: pitch diameter divided by tooth count, in mm. Rack and pinion must share the same module and pressure angle.",
+  z: "Number of teeth on the pinion. Fewer teeth means a smaller pinion but weaker teeth and a risk of undercut.",
+  alpha: "Pressure angle of the tooth flanks. 20° is standard; 14.5° is older, 25° gives stronger teeth.",
+  b: "Width of the teeth along the shaft axis. Stress falls in proportion to face width.",
+  travel: "Stroke the rack must cover. Used to size the rack length.",
+  solve: "Torque needed: enter the load and get the motor torque. Force available: enter the motor torque and get the force at the rack.",
+  rpm: "Pinion speed. Sets rack speed and the dynamic load factor on bending stress.",
+  mat: "Fills in typical placeholder stiffness and allowable stresses. Replace them with datasheet values.",
+  mass: "Mass moved by the rack, including the carriage.",
+  acc: "Peak acceleration of the moved mass in m/s².",
+  inc: "Angle of travel above horizontal. 90° is a vertical lift.",
+  mf: "Friction coefficient of the guide or slide the load rides on.",
+  fext: "Any extra force on the rack, such as a process load or spring.",
+  tm: "Torque your motor can deliver at the speed you run.",
+  gr: "Gearbox reduction between motor and pinion. 5 means the motor turns 5 times per pinion turn.",
+  eta: "Combined efficiency of the gearbox and the gear mesh, typically 85 to 98%.",
+  sb: "Allowable bending stress at the tooth root for your material and life.",
+  sh: "Allowable contact (Hertz) stress on the tooth flank.",
+  ym: "Elastic modulus. About 206 GPa for steel, 3 GPa for acetal.",
+  nu: "Poisson's ratio. About 0.30 for steel, 0.35 for acetal.",
+  spr: "Full steps per motor revolution, 200 for a 1.8° stepper.",
+  us: "Microstepping factor of the driver.",
+  dc: "Error in the pinion-to-rack center distance. It adds backlash of about 2·Δc·tanα."
+};
+
+document.querySelectorAll("main input:not(#ang):not([name=theme]), main select").forEach(el => el.addEventListener("input", update));
+$("mat").addEventListener("change", () => { const m = MAT[$("mat").value]; for (const k in m) $(k).value = m[k]; update(); });
+clampInputs("main input[type=number]", update);
+initTips(TIPS);
+$("play").addEventListener("click", () => setPlaying(!playing));
+$("ang").addEventListener("input", () => { setPlaying(false); setAngle(+$("ang").value); });
+function tick(t) { if (playing && last) setAngle(theta + (t - last) / 1000 * 40); last = t; requestAnimationFrame(tick); }
+setPlaying(playing);
+update();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

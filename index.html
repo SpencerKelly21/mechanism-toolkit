@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mechanism Toolkit</title>
+<meta name="description" content="Interactive mechanism calculators: belt drives, rack and pinion, and more. Geometry first, with an optional physics mode.">
+<meta name="theme-color" content="#12304a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+.plate{position:relative;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;border:2px solid var(--ink);padding:30px 28px 24px}
+.plate::before{content:"";position:absolute;inset:7px;border:1px solid var(--ink);pointer-events:none}
+.kick,.sec{font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--mute)}
+.plate::after{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#3a86ff,#2ec4b6,#ffd23f,var(--belt))}
+.plate header{margin:0}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px;align-items:center;margin:10px 0 30px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}}
+.hero h1{font-size:clamp(44px,8vw,78px);line-height:.95;text-transform:uppercase;letter-spacing:.02em;margin:0 0 16px}
+.hero h1::after{content:"";display:block;width:84px;height:6px;background:var(--belt);margin-top:14px}
+.lede{font-size:17px;max-width:44ch;margin:0 0 14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;padding:0;margin:0;list-style:none}
+.chips li{--c:var(--belt);border:1.5px solid var(--ink);border-left:6px solid var(--c);background:var(--panel);padding:3px 10px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+#hero{width:100%;height:auto}
+#hero text{font:600 5px "Barlow Semi Condensed",system-ui,sans-serif;letter-spacing:.12em;fill:var(--mute);text-anchor:middle}
+.sec{border-bottom:2px solid var(--belt);padding-bottom:6px;margin:0 0 16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
+.tile{--c:var(--belt);display:flex;flex-direction:column;gap:6px;padding:14px;background:var(--panel);background:color-mix(in srgb,var(--c) 13%,var(--panel));border:1.5px solid var(--ink);border-top:6px solid var(--c);color:var(--ink);text-decoration:none;transition:transform .15s,box-shadow .15s}
+a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--c);outline:0}
+.fig{font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:600}
+.ico{width:100%;height:88px;color:var(--c)}
+.tile h2{font-size:20px;margin:0;text-transform:uppercase;letter-spacing:.03em}
+.tile p{margin:0;font-size:14px;color:var(--mute);flex:1}
+.go{align-self:flex-start;font-weight:700;color:var(--ink);font-size:14px;letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--c)}
+.tile.soon{border-style:dashed;border-top-style:solid;background:color-mix(in srgb,var(--c) 6%,transparent)}
+.tile.soon .go{color:var(--mute)}
+.tb{display:flex;justify-content:flex-end;flex-wrap:wrap;margin-top:28px}
+.tb div{border:1.5px solid var(--ink);margin-left:-1.5px;padding:4px 12px;font-weight:700;background:var(--panel)}
+.tb .hl{background:var(--belt);color:var(--paper)}
+.tb .hl span{color:inherit;opacity:.85}
+.chips li:nth-child(2){--c:#3a86ff}
+.chips li:nth-child(3){--c:#2ec4b6}
+.tb span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.spin{animation:cw var(--t) linear infinite}
+.spinr{animation:ccw var(--t) linear infinite}
+.slide{animation:slide 1s linear infinite}
+@keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
+@keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
+@keyframes slide{to{transform:translateX(-9.42px)}}
+@media (prefers-reduced-motion:reduce){.spin,.spinr,.slide{animation:none}}
+</style>
+</head>
+<body>
+<main>
+<div class="plate">
+<header><div class="kick">Mechanical design calculators</div><div id="themeSlot"></div></header>
+<section class="hero">
+<div>
+<h1>Mechanism<br>Toolkit</h1>
+<p class="lede">Belts, gears and linkages you can drag, spin and size. Every page starts as pure geometry and adds a physics mode when you want forces, torques and safety factors.</p>
+<ul class="chips"><li>Live geometry</li><li>Physics mode</li><li>Four themes</li></ul>
+</div>
+<svg id="hero" viewBox="-42 -58 176 120" role="img" aria-label="Two spur gears meshing and turning"></svg>
+</section>
+<h2 class="sec">Contents</h2>
+<div class="tiles">
+<a class="tile" href="belt.html" style="--c:var(--belt)"><span class="fig">FIG. 01</span><svg class="ico" viewBox="0 0 64 64" data-icon="belt"></svg><h2>Belt drive</h2><p>Layout, belt length, wrap angles, tension and slip.</p><span class="go">Open →</span></a>
+<a class="tile" href="rack-pinion.html" style="--c:#3a86ff"><span class="fig">FIG. 02</span><svg class="ico" viewBox="0 0 64 64" data-icon="rack"></svg><h2>Rack and pinion</h2><p>Involute meshing, contact ratio, forces, motor torque and tooth stress.</p><span class="go">Open →</span></a>
+<div class="tile soon" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking and critical speed.</p><span class="go">Planned</span></div>
+<div class="tile soon" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof check, transmission angle and coupler curves.</p><span class="go">Planned</span></div>
+<div class="tile soon" style="--c:#d98e04"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
+<div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
+</div>
+<footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
+</div>
+</main>
+<script src="shared/ui.js"></script>
+<script>
+const TAU = 2 * Math.PI, byId = id => document.getElementById(id);
+// Decorative spur-gear outline (trapezoid teeth, 20° flanks), centred on the origin.
+function gearD(z, m) {
+  const r = m * z / 2, p = Math.PI * m, t = Math.tan(Math.PI / 9), rr = r - 1.25 * m, ro = r + m;
+  const aR = (p / 4 + 1.25 * m * t) / rr, aT = (p / 4 - m * t) / ro;
+  let d = "";
+  for (let k = 0; k < z; k++) {
+    const c = TAU * k / z;
+    [[rr, c - aR], [ro, c - aT], [ro, c + aT], [rr, c + aR]].forEach(([q, a], i) => d += (k + i ? "L" : "M") + (q * Math.cos(a)).toFixed(2) + " " + (q * Math.sin(a)).toFixed(2));
+  }
+  return d + "Z";
+}
+// Closed belt outline around two circles [x, y, r].
+function hull(a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy), f = Math.atan2(dy, dx), be = Math.acos((a[2] - b[2]) / d), pts = [];
+  const arc = (c, a0, a1) => { for (let i = 0; i <= 24; i++) { const t = a0 + (a1 - a0) * i / 24; pts.push((c[0] + c[2] * Math.cos(t)).toFixed(1) + " " + (c[1] + c[2] * Math.sin(t)).toFixed(1)); } };
+  arc(b, f - be, f + be); arc(a, f + be, f - be + TAU);
+  return "M" + pts.join("L") + "Z";
+}
+const spin = (x, y, t, a0, inner, cls = "spin") => `<g transform="translate(${x},${y})"><g class="${cls}" style="--a0:${a0}deg;--t:${t}s">${inner}</g></g>`;
+const line = "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'";
+
+// Hero: gear 12T drives gear 18T, so the speeds must stay in the ratio 18 : 12.
+const g1 = gearD(12, 5), g2 = gearD(18, 5);
+const gear = (d, r, c) => `<path d="${d}" fill="${c}" fill-opacity=".3" stroke="${c}" stroke-width="1.2" stroke-linejoin="round"/><circle r="${r}" fill="none" stroke="${c}" stroke-width=".9"/><line x1="0" y1="0" x2="${r * 2.2}" y2="0" stroke="var(--label)" stroke-width="1.2" stroke-linecap="round"/>`;
+byId("hero").innerHTML =
+  `<g stroke="var(--mute)" stroke-width=".4" stroke-dasharray="6 1.5 1 1.5"><line x1="-42" y1="0" x2="134" y2="0"/><line x1="0" y1="-42" x2="0" y2="42"/><line x1="75" y1="-56" x2="75" y2="56"/></g>` +
+  spin(0, 0, 12, 0, gear(g1, 6, "var(--belt)")) + spin(75, 0, 18, 180 + 10, gear(g2, 8, "#3a86ff"), "spinr") +
+  `<circle r="30" fill="none" stroke="var(--belt)" stroke-width=".6" stroke-dasharray="3 2"/><circle cx="75" r="45" fill="none" stroke="var(--belt)" stroke-width=".6" stroke-dasharray="3 2"/>` +
+  `<text x="0" y="48">12 TEETH</text><text x="75" y="57">18 TEETH</text><text x="37.5" y="-47">RATIO 1.5 : 1</text>`;
+
+const ICONS = {
+  belt: () => `<path d="${hull([18, 38, 10], [46, 30, 14])}" ${line}/>` + spin(18, 38, 5, 0, `<line x1="-7" y1="0" x2="7" y2="0" ${line}/>`) + spin(46, 30, 7, 0, `<line x1="-10" y1="0" x2="10" y2="0" ${line}/>`),
+  rack: () => {
+    let d = "";
+    for (let k = -3; k <= 4; k++) { const c = 24 + 4.71 + k * 9.42; d += `${k === -3 ? "M" : "L"}${c - 3.1} 41.75L${c - 1.6} 35L${c + 1.6} 35L${c + 3.1} 41.75`; }
+    return `<g class="slide"><path d="${d}L80 47L-20 47Z" ${line}/></g>` + spin(24, 26, 8, 90, `<path d="${gearD(8, 3)}" ${line}/><circle r="3" ${line}/>`);
+  },
+  screw: () => `<rect x="10" y="24" width="40" height="16" ${line}/><path d="M18 24l6 16M26 24l6 16M34 24l6 16M42 24l6 16" ${line}/><rect x="28" y="16" width="12" height="32" ${line}/>`,
+  four: () => `<path d="M10 52L22 18L46 24L54 52" ${line}/><path d="M6 52h12M50 52h12" ${line}/><g fill="var(--panel)"><circle cx="10" cy="52" r="3" ${line}/><circle cx="22" cy="18" r="3" ${line}/><circle cx="46" cy="24" r="3" ${line}/><circle cx="54" cy="52" r="3" ${line}/></g>`,
+  cam: () => `<ellipse cx="30" cy="38" rx="18" ry="13" ${line}/><circle cx="30" cy="38" r="2" ${line}/><path d="M30 25V8" ${line}/><circle cx="30" cy="22" r="3" ${line}/>`,
+  motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
+};
+document.querySelectorAll("[data-icon]").forEach(s => s.innerHTML = ICONS[s.dataset.icon]());
+</script>
+</body>
+</html>
