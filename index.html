@@ -17,11 +17,11 @@
 .plate::after{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#3a86ff,#2ec4b6,#ffd23f,var(--belt))}
 .plate header{margin:0}
 .hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:24px;align-items:center;margin:10px 0 30px}
-@media (max-width:760px){.hero{grid-template-columns:1fr}#hero{justify-self:center}}
+@media (max-width:760px){.hero{grid-template-columns:1fr}#hero{justify-self:center;margin:12px 0 0}}
 .hero h1{font-family:"Chakra Petch","Barlow Semi Condensed",system-ui,sans-serif;font-size:clamp(30px,4.6vw,46px);line-height:1.05;text-transform:uppercase;letter-spacing:.06em;margin:0 0 16px}
 .hero h1::after{content:"";display:block;width:84px;height:6px;background:var(--belt);margin-top:14px}
 .lede{font-size:17px;max-width:44ch;margin:0 0 14px}
-#hero{width:100%;max-width:400px;height:auto;justify-self:end}
+#hero{width:100%;max-width:400px;height:auto;justify-self:end;margin:36px 40px 0 0}
 .sec{border-bottom:2px solid var(--belt);padding-bottom:6px;margin:0 0 16px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
 .tile{--c:var(--belt);display:flex;flex-direction:column;gap:6px;padding:14px;background:var(--panel);background:color-mix(in srgb,var(--c) 13%,var(--panel));border:1.5px solid var(--ink);border-top:6px solid var(--c);color:var(--ink);text-decoration:none;transition:transform .15s,box-shadow .15s}
@@ -42,13 +42,14 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 .spinr{animation:ccw var(--t) linear infinite}
 .rk{animation:rk 3s linear infinite alternate}
 .rp{animation:rp 3s linear infinite alternate}
-.tile .spin,.tile .rk,.tile .rp{animation-play-state:paused}
-.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp{animation-play-state:running}
+.fol{animation:fol 6s linear infinite}
+.tile .spin,.tile .rk,.tile .rp,.tile .fol{animation-play-state:paused}
+.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol{animation-play-state:running}
 @keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
 @keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
 @keyframes rk{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
 @keyframes rp{from{transform:rotate(61.35deg)}to{transform:rotate(118.65deg)}}
-@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}}
+@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
 </style>
 </head>
 <body>
@@ -68,7 +69,7 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <a class="tile" href="rack-pinion.html" style="--c:#3a86ff"><span class="fig">FIG. 02</span><svg class="ico" viewBox="0 0 64 64" data-icon="rack"></svg><h2>Rack and pinion</h2><p>Involute meshing, contact ratio, forces, motor torque and tooth stress.</p><span class="go">Open →</span></a>
 <div class="tile soon" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking and critical speed.</p><span class="go">Planned</span></div>
 <div class="tile soon" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof check, transmission angle and coupler curves.</p><span class="go">Planned</span></div>
-<div class="tile soon" style="--c:#d98e04"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
+<div class="tile soon" style="--c:#d6479b"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
 <div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
 </div>
 <footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
@@ -119,9 +120,18 @@ const ICONS = {
   },
   screw: () => `<rect x="10" y="24" width="40" height="16" ${line}/><path d="M18 24l6 16M26 24l6 16M34 24l6 16M42 24l6 16" ${line}/><rect x="28" y="16" width="12" height="32" ${line}/>`,
   four: () => `<path d="M10 52L22 18L46 24L54 52" ${line}/><path d="M6 52h12M50 52h12" ${line}/><g fill="var(--panel)"><circle cx="10" cy="52" r="3" ${line}/><circle cx="22" cy="18" r="3" ${line}/><circle cx="46" cy="24" r="3" ${line}/><circle cx="54" cy="52" r="3" ${line}/></g>`,
-  cam: () => `<ellipse cx="30" cy="38" rx="18" ry="13" ${line}/><circle cx="30" cy="38" r="2" ${line}/><path d="M30 25V8" ${line}/><circle cx="30" cy="22" r="3" ${line}/>`,
+  // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
+  cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
   motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
 };
+{
+  const R = 12, e = 5, rho = 3, N = 36, kf = [];
+  for (let k = 0; k <= N; k++) {
+    const th = TAU * k / N, y = Math.sqrt((R + rho) ** 2 - (e * Math.cos(th)) ** 2) - e * Math.sin(th); // roller height above the cam pivot
+    kf.push(`${(100 * k / N).toFixed(2)}%{transform:translateY(${(R + rho + e - y).toFixed(3)}px)}`);
+  }
+  const st = document.createElement("style"); st.textContent = "@keyframes fol{" + kf.join("") + "}"; document.head.appendChild(st);
+}
 document.querySelectorAll("[data-icon]").forEach(s => s.innerHTML = ICONS[s.dataset.icon]());
 </script>
 </body>
