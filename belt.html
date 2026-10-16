@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pulley Belt Visualizer</title>
+
+<!-- Metadata & Open Graph Tags -->
+<meta name="description" content="Interactive 2D belt drive layout simulator and calculator. Compute belt length, pulley wrap angles, center distance, and gear ratio in real time.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Pulley Belt Visualizer">
+<meta property="og:description" content="Interactive 2D belt drive layout simulator and calculator. Compute belt length, pulley wrap angles, center distance, and gear ratio in real time.">
+<meta name="theme-color" content="#12304a">
+
+<!-- Portfolio SK Logo Favicon -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#eef3f7;--sheet:#eef3f7;--grid:#d2dde6;--panel:#fbfdff;--ink:#12304a;--mute:#5b7388;--line:#c5d2dd;--belt:#e8541a;--fill:rgba(18,48,74,.09);--ifill:rgba(232,84,26,.14);--edge:#12304a;--label:#12304a;--bad:#c0392b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="blueprint"]{--paper:#0f2b4a;--sheet:#0f2b4a;--grid:#1d4266;--panel:#123658;--ink:#e6f0fa;--mute:#93b0cb;--line:#2a5379;--belt:#ffa63d;--fill:rgba(230,240,250,.08);--ifill:rgba(255,166,61,.16);--edge:#e6f0fa;--label:#e6f0fa;--bad:#ff8a7a}
+:root[data-theme="chalkboard"]{--paper:#10261f;--sheet:#173529;--grid:#25493a;--panel:#14302a;--ink:#eaf3ec;--mute:#9fbfaa;--line:#2c5041;--belt:#f4f1e6;--fill:rgba(255,255,255,.07);--ifill:rgba(250,204,21,.2);--edge:#eaf3ec;--label:#eaf3ec;--bad:#ffab9c}
+:root[data-theme="graphite"]{--paper:#1b1d21;--sheet:#23262b;--grid:#32363d;--panel:#25282d;--ink:#e9ecef;--mute:#9aa1a9;--line:#383c43;--belt:#3ddc97;--fill:rgba(255,255,255,.06);--ifill:rgba(61,220,151,.16);--edge:#e9ecef;--label:#e9ecef;--bad:#ff8a7a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.4 "Barlow Semi Condensed",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1060px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{font-size:22px;font-weight:700;margin:0;letter-spacing:.01em}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.seg label{margin:0;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:6px 14px;font-weight:500;border-left:1.5px solid var(--ink)}
+.seg label:first-child span{border-left:0}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:2px solid var(--belt);outline-offset:-4px}
+.pair{display:flex;gap:10px;align-items:center}
+.grp{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grp b{font-weight:500;color:var(--mute);font-size:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.layout{grid-template-columns:1fr}}
+.sheet{border:1.5px solid var(--ink);border-radius:4px;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;position:sticky;top:8px}
+svg{display:block;width:100%;height:auto;aspect-ratio:1/1}
+svg text{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--label);text-anchor:middle;pointer-events:none}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.read{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:12px}
+.read .big{grid-column:1/-1;border-bottom:1.5px solid var(--ink);padding-bottom:8px;margin-bottom:4px}
+.read small{display:block;color:var(--mute);font-size:14px}
+.read .big b{font-size:44px;line-height:1.05;font-weight:700;color:var(--belt)}
+.read b{font-size:24px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;color:var(--mute);font-size:13px;text-align:left;padding:0 4px 6px}
+td{padding:10px 4px;border-top:1px solid var(--line)}
+svg{touch-action:none}
+svg path,svg line,svg polygon{pointer-events:none}
+.drag{cursor:grab}
+.dragging .drag{cursor:grabbing}
+td:first-child{font-weight:600;white-space:nowrap;padding-left:0}
+td input{width:100%;min-width:0;padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit}
+td input:focus,select:focus{outline:2px solid var(--belt);outline-offset:0}
+td.fixed{color:var(--mute);padding-left:10px}
+td.deg{color:var(--mute);text-align:right;white-space:nowrap}
+select{width:100%;margin-top:6px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px}
+.wraprow td{border-top:0;padding-top:0;padding-bottom:12px}
+#err{color:var(--bad);min-height:1.3em;margin:10px 0 0;font-size:14px}
+.note{color:var(--mute);font-size:13px;margin:8px 0 0}
+.pwrap{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.pwrap{grid-template-columns:1fr}}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
+@media (max-width:560px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pout .pw:first-child,.pout .pok:first-child{margin-top:0}
+.tip{width:15px;height:15px;border-radius:50%;border:1px solid var(--mute);background:none;color:var(--mute);font:600 10px/1 "Barlow Semi Condensed",system-ui,sans-serif;padding:0;margin-left:5px;cursor:help;vertical-align:1px}
+.tip:hover,.tip:focus-visible{color:var(--belt);border-color:var(--belt);outline:0}
+.tipbox{position:fixed;z-index:10;max-width:250px;padding:8px 10px;border-radius:6px;background:var(--ink);color:var(--paper);font-size:13px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:none}
+.pgrid label{font-size:13px;color:var(--mute)}
+.pgrid input,.pgrid select{width:100%;margin-top:3px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:15px}
+.pgrid input:focus{outline:2px solid var(--belt)}
+.card h2{font-size:16px;margin:0 0 10px}
+.res{margin-top:0}
+.res td{padding:6px 4px}
+.res td:first-child{font-weight:400;color:var(--mute);padding-left:0}
+.res td:last-child{text-align:right;font-weight:600}
+.pw{color:var(--bad);font-weight:600;margin-top:10px;font-size:14px}
+.pok{color:var(--mute);margin-top:10px;font-size:14px}
+svg circle:not(.drag){pointer-events:none}
+.legend{display:flex;align-items:center;gap:8px;margin:12px 0 4px;font-size:13px;color:var(--mute)}
+.legend i{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,rgb(58,134,255),rgb(46,196,182),rgb(255,210,63),rgb(255,59,48))}
+.how{margin-top:18px;border-top:1px solid var(--line);padding-top:12px}
+.how summary{cursor:pointer;font-weight:600}
+.how h3{font-size:14px;margin:14px 0 4px;color:var(--mute);font-weight:600}
+.how ol,.how ul{padding-left:20px;margin:6px 0}
+.how p{font-size:14.5px;line-height:1.5;margin:6px 0}
+.how li{margin:7px 0;font-size:14.5px;line-height:1.5}
+.how code{font:inherit;font-weight:600;color:var(--belt);white-space:nowrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1>Pulley Belt Visualizer</h1>
+<div class="grp"><div class="pair"><b>Mode</b><div class="seg" role="radiogroup" aria-label="Mode">
+<label><input type="radio" name="mode" value="geo" checked><span>Geometry</span></label>
+<label><input type="radio" name="mode" value="phys"><span>Physics</span></label>
+</div></div>
+<div class="pair"><b>Idlers</b><div class="seg" role="radiogroup" aria-label="Number of idlers">
+<label><input type="radio" name="n" value="0"><span>0</span></label>
+<label><input type="radio" name="n" value="1"><span>1</span></label>
+<label><input type="radio" name="n" value="2" checked><span>2</span></label>
+</div></div>
+<div class="pair"><b>Theme</b><div class="seg" role="radiogroup" aria-label="Theme">
+<label><input type="radio" name="theme" value="drafting"><span>Drafting</span></label>
+<label><input type="radio" name="theme" value="blueprint"><span>Blueprint</span></label>
+<label><input type="radio" name="theme" value="chalkboard"><span>Chalkboard</span></label>
+<label><input type="radio" name="theme" value="graphite"><span>Graphite</span></label>
+</div></div>
+<div class="pair"><b>Travel</b><div class="seg" role="radiogroup" aria-label="Belt direction">
+<label><input type="radio" name="dir" value="cw" checked><span>Clockwise</span></label>
+<label><input type="radio" name="dir" value="ccw"><span>Counter-clockwise</span></label>
+</div></div>
+</div>
+</header>
+
+<div class="layout">
+<div class="sheet"><svg id="svg" viewBox="0 0 100 100" role="img" aria-label="Belt layout"></svg></div>
+
+<div>
+<div class="card">
+<div class="read">
+<div class="big"><small>Belt length</small><b id="len">–</b></div>
+<div><small>Ratio (output : input)</small><b id="ratio">–</b></div>
+<div><small>Center distance</small><b id="cd">–</b></div>
+</div>
+<table>
+<thead><tr><th></th><th>Radius</th><th>X</th><th>Y</th><th style="text-align:right">Wrap</th></tr></thead>
+<tbody>
+<tr><td>Input</td><td><input type="number" id="r0" value="10" step="any" min="0" aria-label="Input radius"></td><td class="fixed">0</td><td class="fixed">0</td><td class="deg" id="a0"></td></tr>
+<tr><td>Output</td><td><input type="number" id="r1" value="20" step="any" min="0" aria-label="Output radius"></td><td><input type="number" id="x1" value="50" step="any" aria-label="Output X"></td><td><input type="number" id="y1" value="-20" step="any" aria-label="Output Y"></td><td class="deg" id="a1"></td></tr>
+<tr data-i="1"><td>Idler 1</td><td><input type="number" id="r2" value="5" step="any" min="0" aria-label="Idler 1 radius"></td><td><input type="number" id="x2" value="20" step="any" aria-label="Idler 1 X"></td><td><input type="number" id="y2" value="2" step="any" aria-label="Idler 1 Y"></td><td class="deg" id="a2"></td></tr>
+<tr data-i="1" class="wraprow"><td></td><td colspan="4"><select id="w2" aria-label="Idler 1 contact"><option value="out">Presses belt inward</option><option value="in">Belt wraps it like a pulley</option></select></td></tr>
+<tr data-i="2"><td>Idler 2</td><td><input type="number" id="r3" value="4" step="any" min="0" aria-label="Idler 2 radius"></td><td><input type="number" id="x3" value="25" step="any" aria-label="Idler 2 X"></td><td><input type="number" id="y3" value="-8" step="any" aria-label="Idler 2 Y"></td><td class="deg" id="a3"></td></tr>
+<tr data-i="2" class="wraprow"><td></td><td colspan="4"><select id="w3" aria-label="Idler 2 contact"><option value="out">Presses belt inward</option><option value="in">Belt wraps it like a pulley</option></select></td></tr>
+</tbody>
+</table>
+<div id="err" role="alert"></div>
+<p class="note">Drag the output pulley or either idler on the drawing to move it; the arrows show each rotation direction; the X and Y fields follow. Units are whatever you type in. The input pulley sits at the origin; wrap is the belt contact angle in degrees.</p>
+</div>
+
+</div>
+</div>
+<div class="card" id="phys" hidden style="margin-top:16px">
+<h2>Physics</h2>
+<div class="pwrap">
+<div class="pgrid">
+<label>Driver<select id="drv"><option value="0">Input pulley</option><option value="1">Output pulley</option></select></label>
+<label>Driver speed (RPM)<input type="number" id="nrpm" value="1500" step="any" min="0"></label>
+<label>Load given as<select id="load"><option value="p">Power (kW)</option><option value="t">Torque (N·m)</option></select></label>
+<label>Load value<input type="number" id="loadv" value="0.1" step="any" min="0"></label>
+<label>Units of radius, X, Y<select id="unit"><option value="mm">mm</option><option value="in">inch</option></select></label>
+<label>Belt type<select id="btype"><option value="flat">Flat (friction)</option><option value="v">V-belt</option><option value="timing">Timing (no slip)</option></select></label>
+<label>Friction μ<input type="number" id="mu" value="0.3" step="0.05" min="0.05" max="1"></label>
+<label id="lblBeta" hidden>Groove angle β (°)<input type="number" id="beta" value="38" step="any" min="1"></label>
+<label>Belt mass (kg/m)<input type="number" id="mpl" value="0.15" step="any" min="0"></label>
+<label>Thickness t (mm)<input type="number" id="tt" value="5" step="any" min="0"></label>
+<label>Modulus E (MPa)<input type="number" id="em" value="300" step="any" min="0"></label>
+<label>Cross-section A (mm²)<input type="number" id="area" value="80" step="any" min="0"></label>
+<label>Pretension from<select id="tmode"><option value="set">Set T0 directly</option><option value="stretch">Belt free length (stretch)</option></select></label>
+<label id="lblT0">Pretension T0 (N)<input type="number" id="t0" value="100" step="any" min="0"></label>
+<label id="lblL0" hidden>Belt free length<input type="number" id="l0" value="225" step="any" min="0"></label>
+<label>Max tension (N)<input type="number" id="tmax" value="250" step="any" min="0"></label>
+<label>Slip (%)<input type="number" id="slip" value="1" step="any" min="0" max="100"></label>
+<label>Efficiency (%)<input type="number" id="eta" value="95" step="any" min="0" max="100"></label>
+<label>Idler drag (% each)<input type="number" id="idrag" value="1" step="any" min="0" max="100"></label>
+<label>Min pulley Ø (mm)<input type="number" id="mind" value="0" step="any" min="0"></label>
+</div>
+<div class="pout"><div id="pwarn"></div>
+<div class="legend"><small>Belt tension</small><span>0 N</span><i></i><span id="lmax"></span></div>
+<table class="res"><tbody id="pres"></tbody></table></div>
+</div>
+<details class="how" open><summary>How this is calculated</summary><div id="pexpl"></div></details>
+</div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const TP = 2 * Math.PI;
+const mod = a => ((a % TP) + TP) % TP;
+const val = id => parseFloat($(id).value);
+let view = null, frozen = false;
+
+// seq items: {x, y, r, s, name, id}; s = +1 wraps counter-clockwise, -1 clockwise (y up)
+function solve(seq) {
+  const n = seq.length, segs = [];
+  for (let i = 0; i < n; i++) {
+    const a = seq[i], b = seq[(i + 1) % n];
+    const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+    const k = b.s * b.r - a.s * a.r;
+    if (L < 1e-9) throw new Error("Two circles share the same center.");
+    if (Math.abs(k) > L) throw new Error("No belt line fits between " + a.name + " and " + b.name + ". One circle contains the other.");
+    segs.push({ th: Math.atan2(dy, dx) + Math.acos(k / L), len: Math.sqrt(L * L - k * k) });
+  }
+  let total = 0, d = "";
+  const arcs = [], arcPts = [], ins = [], outs = [];
+  const pt = (c, th) => [c.x - c.s * c.r * Math.cos(th), -(c.y - c.s * c.r * Math.sin(th))]; // y flipped for screen
+  for (let i = 0; i < n; i++) {
+    const c = seq[i], inTh = segs[(i + n - 1) % n].th, outTh = segs[i].th;
+    const sw = c.s > 0 ? mod(outTh - inTh) : mod(inTh - outTh);
+    arcs.push(sw);
+    const a0 = inTh + (c.s > 0 ? Math.PI : 0), steps = Math.max(2, Math.ceil(sw / .07));
+    arcPts.push(Array.from({ length: steps + 1 }, (_, j) => { const a = a0 + (c.s > 0 ? 1 : -1) * sw * j / steps; return [c.x + c.r * Math.cos(a), -(c.y + c.r * Math.sin(a))]; }));
+    total += c.r * sw + segs[i].len;
+    const [ix, iy] = pt(c, inTh), [ox, oy] = pt(c, outTh);
+    ins[i] = [ix, iy]; outs[i] = [ox, oy];
+    // Points are already flipped for display, so a visually clockwise wrap (s < 0) is SVG sweep-flag 1.
+    d += (i ? "L" : "M") + ix + " " + iy + "A" + c.r + " " + c.r + " 0 " + (sw > Math.PI ? 1 : 0) + " " + (c.s < 0 ? 1 : 0) + " " + ox + " " + oy;
+  }
+  return { total, d: d + "Z", arcs, arcPts, lines: ins.map((_, i) => ({ a: outs[i], b: ins[(i + 1) % n] })) };
+}
+
+const fmt = (x, d = 2) => isFinite(x) ? x.toFixed(d) : "–";
+const RAMP = [[58, 134, 255], [46, 196, 182], [255, 210, 63], [255, 59, 48]];
+function ramp(t) {
+  t = Math.min(1, Math.max(0, t)) * 3;
+  const i = Math.min(2, Math.floor(t)), f = t - i, a = RAMP[i], b = RAMP[i + 1];
+  return "rgb(" + a.map((x, j) => Math.round(x + (b[j] - x) * f)).join(",") + ")";
+}
+
+// Physics mode: fills the results panel and returns SVG overlays (tension arrows, warning rings).
+function physics(seq, res, u) {
+  const nv = id => parseFloat($(id).value), n = seq.length, type = $("btype").value;
+  $("lblBeta").hidden = type !== "v";
+  const stretch = $("tmode").value === "stretch";
+  $("lblT0").hidden = stretch; $("lblL0").hidden = !stretch;
+  $("loadv").parentElement.firstChild.nodeValue = $("load").value === "p" ? "Power (kW) " : "Torque (N·m) ";
+  const ids = ["nrpm", "loadv", "mu", "mpl", "tt", "em", "area", "tmax", "slip", "eta", "idrag", "mind", stretch ? "l0" : "t0"].concat(type === "v" ? ["beta"] : []);
+  if (ids.some(id => !(nv(id) >= 0)) || nv("nrpm") <= 0 || nv("loadv") <= 0 || nv("area") <= 0 || (stretch && nv("l0") <= 0)) {
+    $("pwarn").innerHTML = '<div class="pw">Enter a positive speed, load and area, and a number in every field.</div>';
+    return "";
+  }
+  const k = $("unit").value === "in" ? .0254 : .001; // metres per length unit
+  const o1 = seq.findIndex(c => c.id === 1), di = $("drv").value === "0" ? 0 : o1, oi = di === 0 ? o1 : 0;
+  const rd = seq[di].r * k, ro = seq[oi].r * k, w = TP * nv("nrpm") / 60, v = w * rd;
+  let F, P, tau;
+  if ($("load").value === "p") { P = nv("loadv") * 1000; F = P / v; tau = F * rd; }
+  else { tau = nv("loadv"); F = tau / rd; P = tau * w; }
+  const pc = id => Math.min(100, Math.max(0, nv(id))), mu = Math.min(1, Math.max(.05, nv("mu")));
+  const s = type === "timing" ? 0 : pc("slip") / 100;
+  const eta = pc("eta") / 100 * Math.pow(1 - pc("idrag") / 100, n - 2);
+  const Nd = nv("nrpm") * rd / ro, Tc = nv("mpl") * v * v;
+  const mue = type === "v" ? mu / Math.sin(nv("beta") * Math.PI / 360) : mu;
+  const R = Math.exp(mue * Math.min(res.arcs[di], res.arcs[oi]));
+  const crit = res.arcs[di] <= res.arcs[oi] ? di : oi;
+  const T0 = stretch ? Math.max(0, nv("em") * nv("area") * (res.total - nv("l0")) / nv("l0")) : nv("t0"), T1 = T0 + F / 2, T2 = T0 - F / 2, ratio = (T1 - Tc) / (T2 - Tc);
+  const slipping = type !== "timing" && (T2 <= Tc || ratio > R);
+  const T0min = Tc + F * (R + 1) / (2 * (R - 1));
+  const rmin = Math.min(...seq.map(c => c.r * k * 1000));
+  const sa = T1 / nv("area"), sb = nv("em") * nv("tt") / (2 * rmin);
+  const small = seq.map(c => 2 * c.r * k * 1000 < nv("mind"));
+
+  const W = [];
+  if (slipping && T2 <= Tc) W.push(`BELT SLIP WARNING: pretension is too low. At this pull the slack side would need ${fmt(T2, 1)} N, and a belt can only pull, never push. Raise T0 to at least ${fmt(T0min, 1)} N or reduce the load.`);
+  else if (slipping) W.push(`BELT SLIP WARNING: the ${seq[crit].name} wraps only ${fmt(res.arcs[crit] * 180 / Math.PI, 1)}° at μ = ${fmt(mu)}, so it cannot hold this pull. Raise T0 to at least ${fmt(T0min, 1)} N, add wrap, or raise μ.`);
+  if (stretch && res.total < nv("l0")) W.push("The belt's free length is longer than the layout, so it carries no pretension.");
+  if (T1 > nv("tmax")) W.push("Tight-side tension exceeds the maximum rated tension.");
+  if (small.some(Boolean)) W.push("Below minimum pulley diameter: " + seq.filter((c, i) => small[i]).map(c => c.name).join(", ") + ".");
+  $("pwarn").innerHTML = W.length ? W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No warnings.</div>';
+
+  const rows = [
+    ["Belt speed", fmt(v) + " m/s"],
+    ["Driven speed", fmt(Nd * (1 - s), 1) + " RPM" + (s ? ` (ideal ${fmt(Nd, 1)})` : "")],
+    ["Net pull T1 − T2", fmt(F) + " N"],
+    ["Torque, driver → driven", fmt(tau) + " → " + fmt(tau * ro / rd * eta) + " N·m"],
+    ["Power in → out", fmt(P, 1) + " → " + fmt(P * eta * (1 - s), 1) + " W"],
+    ["Centrifugal tension Tc", fmt(Tc) + " N"],
+    ["Pretension T0", fmt(T0, 1) + " N"],
+    ["Tight T1 / slack T2", fmt(T1, 1) + " / " + fmt(T2, 1) + " N"],
+    ["Min pretension, no slip", type === "timing" ? "n/a" : fmt(T0min, 1) + " N"],
+    ["Tension ratio / limit", type === "timing" ? "n/a" : fmt(ratio) + " / " + fmt(R)],
+    ["Peak belt stress", fmt(sa + sb, 1) + " MPa"]
+  ];
+  $("pres").innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+
+  const thd = Math.min(res.arcs[di], res.arcs[oi]) * 180 / Math.PI;
+  $("pexpl").innerHTML = `
+<p>Think of the belt as a stretched rubber band looped over two wheels. Stretching it (pretension) makes it squeeze the wheels, and that squeeze is what gives it friction to grip.</p>
+<h3>The parts</h3>
+<ul>
+<li><b>Driver pulley</b> sits on the motor shaft and drags the belt along.</li>
+<li><b>Driven pulley</b> sits on the load. The belt turns it.</li>
+<li><b>Idlers</b> spin freely. They steer the belt and add wrap but carry no torque, so they never need to grip.</li>
+<li><b>Tight side</b> is the strand running onto the driver. <b>Slack side</b> is the strand leaving it.</li>
+</ul>
+<h3>The steps (with numbers)</h3>
+<ol>
+<li><b>Belt speed.</b> The belt moves as fast as the driver's rim: v = 2π·N·r / 60 = <code>${fmt(v)} m/s</code>.</li>
+<li><b>Net pull.</b> Power is force × speed, so the belt must deliver F = P / v = <code>${fmt(F)} N</code> (if you give torque instead, F = τ / r). This is exactly the gap between the tight and slack tensions.</li>
+<li><b>Pretension and the two sides.</b> A belt is installed with tension T0 so it presses on the pulleys. Under load the driver stretches one side and relaxes the other by half the pull each: T1 = T0 + F/2 = <code>${fmt(T1, 1)} N</code> and T2 = T0 − F/2 = <code>${fmt(T2, 1)} N</code>. Their sum stays 2·T0 because a belt behaves like a spring.</li>
+<li><b>Why load changes tension.</b> Raising the pull F raises T1 by half the increase and lowers T2 by half. Power and speed matter only through F. A belt can only pull, so T2 can never go below zero. If the math says it would, the pretension is too low and the belt goes slack and slips.</li>
+${type === "timing" ? "<li><b>Grip.</b> Timing belts lock into teeth, so there is no friction limit to check and slip is ignored.</li>" : `<li><b>Grip limit.</b> Friction builds up around the wrap like a rope on a capstan, so the tight side can exceed the slack side by at most e^(μθ)${type === "v" ? ", where the groove wedge multiplies μ by 1 / sin(β/2)" : ""}. The smallest wrap on the driver or driven pulley is <code>${fmt(thd, 1)}°</code>, so the limit is <code>${fmt(R)}</code>. Centrifugal tension Tc = m′v² = <code>${fmt(Tc)} N</code> is subtracted from both sides because a spinning belt flings itself off the pulley. Your ratio (T1 − Tc) / (T2 − Tc) is <code>${fmt(ratio)}</code>, so the belt ${slipping ? "slips" : "holds"}. The pretension must be at least <code>${fmt(T0min, 1)} N</code>.</li>`}
+<li><b>Speed and torque.</b> Driven speed = N × r<sub>driver</sub> / r<sub>driven</sub> × (1 − slip) = <code>${fmt(Nd * (1 - s), 1)} RPM</code>. Torque scales with the radius ratio and drops with efficiency: <code>${fmt(tau * ro / rd * eta)} N·m</code>. Power out = P × η × (1 − slip) = <code>${fmt(P * eta * (1 - s), 1)} W</code>.</li>
+<li><b>Stress.</b> Tension stress T1 / A = <code>${fmt(sa, 1)} MPa</code>. Bending stress E·t / (2r) = <code>${fmt(sb, 1)} MPa</code> on the smallest circle (r = ${fmt(rmin, 1)} mm). Bending usually dominates, which is why small idlers shorten belt life.</li>
+<li><b>Where position comes in.</b> Positions set the wrap angles (and so the grip limit), the belt length, and the direction of the strands. T1 and T2 themselves come from the load and the pretension. With "Belt free length" selected, moving a pulley stretches or relaxes the belt, so T0 changes with it.</li>
+<li><b>Colors.</b> The belt is colored by tension: constant along straight strands and changing gradually across the driver and driven wraps, on a scale from 0 to your maximum tension.</li>
+</ol>`;
+
+  // Belt colored by tension: constant on straight strands, changing across the driver and driven wraps.
+  const tight = i => { for (let j = oi; j !== di; j = (j + 1) % n) if (j === i) return true; return false; };
+  const Tl = j => tight(((j % n) + n) % n) ? T1 : T2;
+  const tmax = nv("tmax") > 0 ? nv("tmax") : T1;
+  $("lmax").textContent = fmt(tmax, 0) + " N";
+  const seg = (a, b, T) => `<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${ramp(T / tmax)}" stroke-width="${u * .8}" stroke-linecap="round"/>`;
+  let out = "";
+  res.arcPts.forEach((pts, i) => {
+    for (let j = 0; j < pts.length - 1; j++) out += seg(pts[j], pts[j + 1], Tl(i - 1) + (Tl(i) - Tl(i - 1)) * (j + .5) / (pts.length - 1));
+  });
+  res.lines.forEach((L, i) => { out += seg(L.a, L.b, Tl(i)); });
+  const len = L => Math.hypot(L.b[0] - L.a[0], L.b[1] - L.a[1]);
+  const longest = f => res.lines.reduce((best, L, i) => f(i) && (best < 0 || len(L) > len(res.lines[best])) ? i : best, -1);
+  const lt = longest(tight), ls = longest(i => !tight(i));
+  res.lines.forEach((L, i) => {
+    const tt = tight(i), dx = (L.b[0] - L.a[0]) / len(L), dy = (L.b[1] - L.a[1]) / len(L);
+    const mx = (L.a[0] + L.b[0]) / 2, my = (L.a[1] + L.b[1]) / 2, h = u * 1.6;
+    out += `<polygon points="${mx + dx * h},${my + dy * h} ${mx - dx * h * .6 - dy * h * .7},${my - dy * h * .6 + dx * h * .7} ${mx - dx * h * .6 + dy * h * .7},${my - dy * h * .6 - dx * h * .7}" fill="var(--label)" stroke="var(--sheet)" stroke-width="${u * .25}"/>`;
+    if (i === lt || i === ls) out += `<text x="${mx - dy * u * 3.4}" y="${my + dx * u * 3.4}" style="font-size:${u * 2.8}px;paint-order:stroke;stroke:var(--sheet);stroke-width:${u * .8}px">${tt ? "T1" : "T2"} ${fmt(tt ? T1 : T2, 0)} N</text>`;
+  });
+  seq.forEach((c, i) => {
+    const bad = slipping && i === crit;
+    if (bad || small[i]) out += `<circle cx="${c.x}" cy="${-c.y}" r="${c.r}" fill="${bad ? "var(--bad)" : "none"}" fill-opacity=".22" stroke="var(--bad)" stroke-width="${u * .7}"${bad ? "" : ` stroke-dasharray="${u * 1.5} ${u * .8}"`}/>`;
+  });
+  return out;
+}
+
+function update() {
+  const count = +document.querySelector('input[name=n]:checked').value;
+  document.querySelectorAll("[data-i]").forEach(r => r.hidden = +r.dataset.i > count);
+  [0, 1, 2, 3].forEach(i => $("a" + i).textContent = "");
+  $("err").textContent = "";
+  const phys = document.querySelector('input[name=mode]:checked').value === "phys";
+  $("phys").hidden = !phys;
+  if (phys) { $("pres").innerHTML = ""; $("pwarn").innerHTML = ""; }
+
+  const g = document.querySelector('input[name=dir]:checked').value === "cw" ? -1 : 1;
+  const P = (id, name, s) => ({ id, name, s, r: val("r" + id), x: id ? val("x" + id) : 0, y: id ? val("y" + id) : 0 });
+  const idl = i => P(i + 1, "idler " + i, $("w" + (i + 1)).value === "out" ? -g : g);
+  const input = P(0, "input", g), output = P(1, "output", g);
+  const seq = [input];
+  if (count >= 1) seq.push(idl(1));
+  seq.push(output);
+  if (count >= 2) seq.push(idl(2));
+
+  if (seq.some(c => !isFinite(c.r) || !isFinite(c.x) || !isFinite(c.y) || c.r <= 0)) {
+    $("len").textContent = $("ratio").textContent = $("cd").textContent = "–";
+    $("err").textContent = "Enter a positive radius and a number for every position.";
+    return;
+  }
+
+  const xs0 = Math.min(...seq.map(c => c.x - c.r)), xs1 = Math.max(...seq.map(c => c.x + c.r));
+  const ys0 = Math.min(...seq.map(c => -c.y - c.r)), ys1 = Math.max(...seq.map(c => -c.y + c.r));
+  if (!frozen) view = { cx: (xs0 + xs1) / 2, cy: (ys0 + ys1) / 2, size: Math.max(xs1 - xs0, ys1 - ys0) * 1.18 };
+  const size = view.size, svg = $("svg"), u = size / 100;
+  svg.setAttribute("viewBox", [view.cx - size / 2, view.cy - size / 2, size, size].join(" "));
+
+  let html = `<line x1="0" y1="0" x2="${output.x}" y2="${-output.y}" stroke="var(--mute)" stroke-width="${u * .25}" stroke-dasharray="${u * 2} ${u * .8} ${u * .4} ${u * .8}"/>`;
+  html += seq.map(c => {
+    const idler = c.name.startsWith("idler"), cy = -c.y;
+    const ra = Math.min(c.r * .45, u * 5), k = ra * .5, h = ra * .5;
+    const cw = c.s < 0, a0 = -150 * Math.PI / 180, a1 = a0 + (cw ? 1 : -1) * 1.5 * Math.PI;
+    const sx = c.x + ra * Math.cos(a0), sy = cy + ra * Math.sin(a0), ex = c.x + ra * Math.cos(a1), ey = cy + ra * Math.sin(a1);
+    const tx = cw ? -Math.sin(a1) : Math.sin(a1), ty = cw ? Math.cos(a1) : -Math.cos(a1);
+    const head = `${ex + tx * h},${ey + ty * h} ${ex - ty * h * .6},${ey + tx * h * .6} ${ex + ty * h * .6},${ey - tx * h * .6}`;
+    const fs = idler ? u * 2.8 : Math.min(u * 3.2, c.r * .5);
+    const label = c.name === "input" ? "Input" : c.name === "output" ? "Output" : c.name.slice(-1);
+    const ty2 = idler ? cy - c.r - u * .9 : cy + ra + fs * 1.3;
+    return `<circle ${c.id ? `class="drag" data-id="${c.id}" ` : ""}cx="${c.x}" cy="${cy}" r="${c.r}" fill="var(${idler ? "--ifill" : "--fill"})" stroke="var(--edge)" stroke-width="${u * .3}"/>` +
+      `<path d="M${c.x - k} ${cy}H${c.x + k}M${c.x} ${cy - k}V${cy + k}" stroke="var(--label)" stroke-width="${u * .2}"/>` +
+      `<path d="M${sx} ${sy}A${ra} ${ra} 0 1 ${cw ? 1 : 0} ${ex} ${ey}" fill="none" stroke="var(--label)" stroke-width="${u * .3}" stroke-linecap="round"/>` +
+      `<polygon points="${head}" fill="var(--label)"/>` +
+      `<text x="${c.x}" y="${ty2}" style="font-size:${fs}px">${label}</text>`;
+  }).join("");
+
+  try {
+    const res = solve(seq);
+    const po = phys ? physics(seq, res, u) : "";
+    html += po || `<path d="${res.d}" fill="none" stroke="var(--belt)" stroke-width="${u * .9}" stroke-linejoin="round" stroke-linecap="round"/>`;
+    $("len").textContent = res.total.toFixed(3);
+    $("cd").textContent = Math.hypot(output.x, output.y).toFixed(3);
+    seq.forEach((c, i) => $("a" + c.id).textContent = (res.arcs[i] * 180 / Math.PI).toFixed(1) + "°");
+  } catch (e) {
+    $("len").textContent = $("cd").textContent = "–";
+    $("err").textContent = e.message;
+  }
+  $("ratio").textContent = (output.r / input.r).toFixed(3) + " : 1";
+  svg.innerHTML = html;
+}
+
+document.querySelectorAll("input, select").forEach(el => el.addEventListener("input", update));
+
+// Themes (remembered between visits when storage is available)
+const themes = ["drafting", "blueprint", "chalkboard", "graphite"];
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  document.querySelector('input[name=theme][value=' + t + ']').checked = true;
+  try { localStorage.setItem("beltTheme", t); } catch (e) {}
+}
+let savedTheme = null;
+try { savedTheme = localStorage.getItem("beltTheme"); } catch (e) {}
+setTheme(themes.includes(savedTheme) ? savedTheme : (matchMedia("(prefers-color-scheme: dark)").matches ? "blueprint" : "drafting"));
+document.querySelectorAll('input[name=theme]').forEach(r => r.addEventListener("change", () => setTheme(r.value)));
+
+// Keep the same physical load when switching between power and torque (P = torque x angular speed).
+$("load").addEventListener("change", () => {
+  const w = TP * val("nrpm") / 60, x = val("loadv");
+  if (w > 0 && x >= 0) $("loadv").value = +(($("load").value === "t") ? x * 1000 / w : x * w / 1000).toPrecision(4);
+  update();
+});
+
+// Snap typed values back into each field's allowed range.
+document.querySelectorAll("#phys input[type=number]").forEach(el => el.addEventListener("change", () => {
+  const lo = parseFloat(el.min), hi = parseFloat(el.max), v = parseFloat(el.value);
+  if (!isFinite(v)) return;
+  const c = Math.min(isFinite(hi) ? hi : Infinity, Math.max(isFinite(lo) ? lo : -Infinity, v));
+  if (c !== v) { el.value = c; update(); }
+}));
+
+// Help popouts for the physics inputs
+const TIPS = {
+  drv: "The pulley connected to the motor. The other pulley is the driven load. The belt runs onto the driver on its tight side.",
+  nrpm: "Rotational speed of the driver pulley in RPM. Sets belt speed v = 2π·N·r.",
+  load: "Give the load as transmitted power or as torque at the driver pulley.",
+  loadv: "Power in kW or torque in N·m at the driver, per the choice beside it. Sets the net belt pull F = P / v.",
+  unit: "Length unit used by the radius, X and Y fields above. Physics converts them to metres.",
+  btype: "Flat and V-belts rely on friction and can slip. Timing belts engage teeth, so slip is ignored.",
+  mu: "Friction coefficient between belt and pulley, limited to 0.05 to 1. Dry rubber on metal is roughly 0.2 to 0.5; oil or dirt lowers it.",
+  beta: "Included angle of the V-groove, typically 34° to 40°. The wedge multiplies grip by 1 / sin(β/2).",
+  mpl: "Belt mass per metre. Gives centrifugal tension Tc = m′v², which reduces grip at high speed.",
+  tt: "Belt thickness in mm. Sets bending stress E·t / (2r) over small pulleys.",
+  em: "Elastic modulus of the belt in MPa. Reinforced belts differ from the base material, so use the datasheet value.",
+  area: "Belt cross-section in mm². Tight-side tension divided by this gives tensile stress.",
+  t0: "Static installed tension. Tight and slack tensions are T0 ± F/2, which assumes a linear-elastic belt.",
+  tmode: "Set T0 directly, or derive it from the belt's free length. A belt shorter than the layout is stretched, and T0 = E·A·(stretch / free length).",
+  l0: "Unstretched belt length in the same unit as the layout. Compare it with the belt length shown above: the difference is the stretch, so moving pulleys changes T0.",
+  tmax: "Rated maximum tight-side tension in newtons. A warning shows if T1 exceeds it.",
+  slip: "Creep and slip, typically 0.5 to 3%. Lowers the driven speed. Ignored for timing belts.",
+  eta: "Overall drive efficiency before idler losses (bearings, windage, flexing), typically 85 to 98%.",
+  idrag: "Extra efficiency lost per idler, typically 1 to 2%.",
+  mind: "Smallest pulley or idler diameter the belt allows, from the manufacturer. Smaller circles get a dashed red outline."
+};
+const tipEl = document.createElement("div");
+tipEl.className = "tipbox"; tipEl.hidden = true; document.body.appendChild(tipEl);
+let tipFor = null;
+const hideTip = () => { tipEl.hidden = true; tipFor = null; };
+function showTip(b) {
+  tipEl.textContent = b.dataset.tip; tipEl.hidden = false; tipFor = b;
+  const r = b.getBoundingClientRect(), w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+  tipEl.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + "px";
+  tipEl.style.top = (r.bottom + h + 12 > innerHeight ? r.top - h - 6 : r.bottom + 6) + "px";
+}
+for (const id in TIPS) {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "tip"; b.textContent = "?"; b.dataset.tip = TIPS[id];
+  b.setAttribute("aria-label", "About " + $(id).parentElement.firstChild.textContent.trim());
+  $(id).before(b);
+}
+const canHover = matchMedia("(hover: hover)").matches;
+document.addEventListener("click", e => {
+  const b = e.target.closest(".tip");
+  if (!b) return hideTip();
+  e.preventDefault();
+  if (canHover || tipFor !== b) showTip(b); else hideTip();
+});
+if (canHover) document.addEventListener("mouseover", e => {
+  const b = e.target.closest(".tip");
+  if (b) showTip(b); else if (tipFor) hideTip();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") hideTip(); });
+addEventListener("scroll", hideTip, true);
+
+// Drag the output pulley or either idler; X/Y fields update live.
+const svgEl = $("svg");
+let dragId = null, off = { x: 0, y: 0 };
+const toMath = e => {
+  const p = svgEl.createSVGPoint();
+  p.x = e.clientX; p.y = e.clientY;
+  const q = p.matrixTransform(svgEl.getScreenCTM().inverse());
+  return { x: q.x, y: -q.y };
+};
+svgEl.addEventListener("pointerdown", e => {
+  const t = e.target.closest(".drag");
+  if (!t) return;
+  dragId = t.dataset.id;
+  const m = toMath(e);
+  off = { x: val("x" + dragId) - m.x, y: val("y" + dragId) - m.y };
+  frozen = true;
+  svgEl.classList.add("dragging");
+  svgEl.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+svgEl.addEventListener("pointermove", e => {
+  if (!dragId) return;
+  const m = toMath(e);
+  $("x" + dragId).value = +(m.x + off.x).toFixed(2);
+  $("y" + dragId).value = +(m.y + off.y).toFixed(2);
+  update();
+});
+const endDrag = () => {
+  if (!dragId) return;
+  dragId = null; frozen = false;
+  svgEl.classList.remove("dragging");
+  update();
+};
+svgEl.addEventListener("pointerup", endDrag);
+svgEl.addEventListener("pointercancel", endDrag);
+update();
+</script>
+</body>
+</html>
