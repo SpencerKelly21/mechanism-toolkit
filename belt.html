@@ -26,8 +26,10 @@ html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.4 "Barlow Semi Condensed",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
 main{max-width:1060px;margin:0 auto;padding:16px}
+  
 header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;margin-bottom:14px}
 h1{font-size:22px;font-weight:700;margin:0;letter-spacing:.01em}
+.back{color:var(--mute);text-decoration:none;margin-right:4px}.back:hover{color:var(--belt)}
 .seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
 .seg label{margin:0;cursor:pointer}
 .seg input{position:absolute;opacity:0;pointer-events:none}
@@ -99,7 +101,7 @@ svg circle:not(.drag){pointer-events:none}
 <body>
 <main>
 <header>
-<h1>Pulley Belt Visualizer</h1>
+<h1><a class="back" href="index.html" aria-label="Back to all mechanisms">←</a> Pulley Belt Visualizer</h1>
 <div class="grp"><div class="pair"><b>Mode</b><div class="seg" role="radiogroup" aria-label="Mode">
 <label><input type="radio" name="mode" value="geo" checked><span>Geometry</span></label>
 <label><input type="radio" name="mode" value="phys"><span>Physics</span></label>
