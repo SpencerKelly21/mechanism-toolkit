@@ -89,7 +89,7 @@
 <script src="shared/ui.js"></script>
 <script>
 const svg = $("svg");
-let G = null, theta = 0, last = 0, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+let G = null, theta = 0, last = 0, playing = false;
 const MAT = { steel: { ym: 206, nu: .3, sb: 200, sh: 800 }, pom: { ym: 3, nu: .35, sb: 35, sh: 30 } };
 const LEWIS = [[12,.245],[13,.261],[14,.277],[15,.290],[16,.296],[17,.303],[18,.309],[19,.314],[20,.322],[21,.328],[22,.331],[24,.337],[26,.346],[28,.353],[30,.359],[34,.371],[38,.384],[45,.399],[50,.408],[60,.421],[75,.434],[100,.447],[150,.460],[300,.472]];
 function lewisY(z) {
