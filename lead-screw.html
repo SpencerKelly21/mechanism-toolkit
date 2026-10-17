@@ -30,12 +30,7 @@ svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mu
 </header>
 
 <div class="layout">
-<div>
-<div class="sheet"><svg id="svg" role="img" aria-label="Lead screw turning while the nut travels along it"></svg></div>
-<div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="1000" step="1" value="0" aria-label="Nut position"><span id="angv"></span></div>
-<p class="note">The thread lines drift at the same speed as the nut, as on a rotating screw. One turn moves the nut by exactly one lead. Drawn to scale for the screw diameter.</p>
-</div>
-
+<!-- 1. Geometry Readout & Inputs Table (Top) -->
 <div class="card">
 <div class="read">
 <div class="big"><small>Nut travel per screw revolution (lead)</small><b id="lead">–</b></div>
@@ -55,8 +50,16 @@ svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mu
 <div id="gwarn"></div>
 <table class="res"><tbody id="gres"></tbody></table>
 </div>
+
+<!-- 2. Screw Animation (Middle) -->
+<div>
+<div class="sheet"><svg id="svg" role="img" aria-label="Lead screw turning while the nut travels along it"></svg></div>
+<div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="1000" step="1" value="0" aria-label="Nut position"><span id="angv"></span></div>
+<p class="note">The thread lines drift at the same speed as the nut, as on a rotating screw. One turn moves the nut by exactly one lead. Drawn to scale for the screw diameter.</p>
+</div>
 </div>
 
+<!-- 3. Physics Section (Bottom) -->
 <div class="card" id="phys" hidden style="margin-top:16px">
 <h2>Physics</h2>
 <div class="pwrap">
@@ -126,7 +129,6 @@ function draw() {
     `<g clip-path="url(#sc)"><g id="thr"><path d="${d}" fill="none" stroke="var(--edge)" stroke-width="1" opacity=".75"/></g></g>` +
     `<line x1="0" y1="${Y0 + H / 2}" x2="500" y2="${Y0 + H / 2}" stroke="var(--mute)" stroke-width=".7" stroke-dasharray="8 2 2 2"/>` +
     `<g id="nutG"><rect x="${X0}" y="${Y0 - 22}" width="56" height="${H + 44}" fill="var(--sheet)"/><rect x="${X0}" y="${Y0 - 22}" width="56" height="${H + 44}" fill="var(--ifill)" stroke="var(--belt)" stroke-width="1.8"/><text x="${X0 + 28}" y="${Y0 - 8}">NUT</text></g>` +
-    `<text x="250" y="24">screw turns, nut slides</text>`;
   apply();
 }
 
