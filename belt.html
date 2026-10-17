@@ -96,6 +96,13 @@ svg circle:not(.drag){pointer-events:none}
 .how li{margin:7px 0;font-size:14.5px;line-height:1.5}
 .how code{font:inherit;font-weight:600;color:var(--belt);white-space:nowrap}
 [hidden]{display:none!important}
+  @media (max-width:520px){
+.pair{flex-wrap:wrap;gap:6px 10px}
+.seg:has(label:nth-child(4)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg:has(label:nth-child(4)) span{text-align:center}
+.seg:has(label:nth-child(4)) label:nth-child(odd) span{border-left:0}
+.seg:has(label:nth-child(4)) label:nth-child(n+3) span{border-top:1.5px solid var(--ink)}
+}
 </style>
 </head>
 <body>
