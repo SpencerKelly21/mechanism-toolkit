@@ -57,4 +57,13 @@ table{width:100%;border-collapse:collapse}
 .tip{width:15px;height:15px;border-radius:50%;border:1px solid var(--mute);background:none;color:var(--mute);font:600 10px/1 "Barlow Semi Condensed",system-ui,sans-serif;padding:0;margin-left:5px;cursor:help;vertical-align:1px}
 .tip:hover,.tip:focus-visible{color:var(--belt);border-color:var(--belt);outline:0}
 .tipbox{position:fixed;z-index:10;max-width:250px;padding:8px 10px;border-radius:6px;background:var(--ink);color:var(--paper);font-size:13px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:none}
+@media (max-width:520px){
+.pair{flex-wrap:wrap;gap:6px 10px}
+.seg:has(label:nth-child(4)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg:has(label:nth-child(4)) span{text-align:center}
+.seg:has(label:nth-child(4)) label:nth-child(odd) span{border-left:0}
+.seg:has(label:nth-child(4)) label:nth-child(n+3) span{border-top:1.5px solid var(--ink)}
+.ctl{flex-wrap:wrap}
+.ctl span{min-width:0;flex-basis:100%;text-align:left}
+}
 [hidden]{display:none!important}
