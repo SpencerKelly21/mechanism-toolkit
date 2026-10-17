@@ -10,7 +10,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/theme.css">
-<style>svg{display:block;width:100%;height:auto;aspect-ratio:5/2}svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mute);text-anchor:middle}</style>
+<style>
+.layout{grid-template-columns:1fr!important}
+svg{display:block;width:100%;height:auto;aspect-ratio:3.5/1}
+svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mute);text-anchor:middle}
+</style>
 </head>
 <body>
 <main>
@@ -30,11 +34,8 @@
 <div class="sheet"><svg id="svg" role="img" aria-label="Lead screw turning while the nut travels along it"></svg></div>
 <div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="1000" step="1" value="0" aria-label="Nut position"><span id="angv"></span></div>
 <p class="note">The thread lines drift at the same speed as the nut, as on a rotating screw. One turn moves the nut by exactly one lead. Drawn to scale for the screw diameter.</p>
-<div class="card" style="margin-top:12px">
-<div id="gwarn"></div>
-<table class="res"><tbody id="gres"></tbody></table>
 </div>
-</div>
+
 <div class="card">
 <div class="read">
 <div class="big"><small>Nut travel per screw revolution (lead)</small><b id="lead">–</b></div>
@@ -51,6 +52,8 @@
 <label>End supports<select id="ends"><option value="fixfree">Fixed - free</option><option value="pinpin">Pinned - pinned</option><option value="fixpin" selected>Fixed - pinned</option><option value="fixfix">Fixed - fixed</option></select></label>
 <label>Screw speed (RPM)<input type="number" id="N" value="300" step="any" min="0" max="10000"></label>
 </div>
+<div id="gwarn"></div>
+<table class="res"><tbody id="gres"></tbody></table>
 </div>
 </div>
 
@@ -98,7 +101,7 @@
 const svg = $("svg");
 const ENDS = { fixfree: { lam: 1.875, K: 2 }, pinpin: { lam: Math.PI, K: 1 }, fixpin: { lam: 3.927, K: .7 }, fixfix: { lam: 4.73, K: .5 } };
 const HALF = { acme: 14.5, trap: 15, square: 0, ball: 0 };
-const SX = 16, EX = 384, Y0 = 60, H = 40, X0 = 40, RANGE = 150;
+const SX = 16, EX = 484, Y0 = 50, H = 40, X0 = 40, RANGE = 240;
 let G = null, pos = 0, dir = 1, last = 0, playing = false;
 
 function geom() {
@@ -114,20 +117,19 @@ function draw() {
   g.sc = sc; g.pp = pp;
   let d = "";
   if (pp >= 1.2) { const n = Math.ceil((EX - SX + dx + 2 * pp) / pp) + 1; for (let k = 0; k < n; k++) { const x = SX - dx - pp + k * pp; d += `M${x.toFixed(2)} ${Y0 + H}L${(x + dx).toFixed(2)} ${Y0}`; } }
-  svg.setAttribute("viewBox", "0 0 400 160");
+  svg.setAttribute("viewBox", "0 0 500 140");
   svg.innerHTML =
     `<defs><clipPath id="sc"><rect x="${SX}" y="${Y0}" width="${EX - SX}" height="${H}"/></clipPath></defs>` +
-    `<rect x="0" y="40" width="${SX}" height="80" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.2"/>` +
-    `<rect x="${EX}" y="48" width="16" height="64" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.2"/>` +
+    `<rect x="0" y="30" width="${SX}" height="80" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.2"/>` +
+    `<rect x="${EX}" y="38" width="16" height="64" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.2"/>` +
     `<rect x="${SX}" y="${Y0}" width="${EX - SX}" height="${H}" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.5"/>` +
     `<g clip-path="url(#sc)"><g id="thr"><path d="${d}" fill="none" stroke="var(--edge)" stroke-width="1" opacity=".75"/></g></g>` +
-    `<line x1="0" y1="${Y0 + H / 2}" x2="400" y2="${Y0 + H / 2}" stroke="var(--mute)" stroke-width=".7" stroke-dasharray="8 2 2 2"/>` +
+    `<line x1="0" y1="${Y0 + H / 2}" x2="500" y2="${Y0 + H / 2}" stroke="var(--mute)" stroke-width=".7" stroke-dasharray="8 2 2 2"/>` +
     `<g id="nutG"><rect x="${X0}" y="${Y0 - 22}" width="56" height="${H + 44}" fill="var(--sheet)"/><rect x="${X0}" y="${Y0 - 22}" width="56" height="${H + 44}" fill="var(--ifill)" stroke="var(--belt)" stroke-width="1.8"/><text x="${X0 + 28}" y="${Y0 - 8}">NUT</text></g>` +
-    `<text x="200" y="26">screw turns, nut slides</text>`;
+    `<text x="250" y="24">screw turns, nut slides</text>`;
   apply();
 }
 
-// The nut and the thread pattern move together: one lead of nut travel per screw turn.
 function apply() {
   if (!G) return;
   const off = pos * RANGE, mm = off / G.sc, n = $("nutG"), t = $("thr");
@@ -148,11 +150,11 @@ function physics(g) {
   }
   const F = nv("F"), Fp = F + nv("mass") * nv("acc"), mu = nv("mu"), muc = nv("muc"), dc = nv("dc");
   const eb = Math.min(100, nv("eb")) / 100, eg = Math.min(100, nv("eg")) / 100, sec = 1 / Math.cos(g.al);
-  const col = f => f * muc * dc / 2;                                                    // N·mm
+  const col = f => f * muc * dc / 2;
   const raise = f => (ball ? f * g.l / (2 * PI * eb) : f * g.dm / 2 * (g.l + PI * mu * g.dm * sec) / (PI * g.dm - mu * g.l * sec)) + col(f);
   const lower = f => (ball ? f * g.l / (2 * PI) * (1 / eb - 2) : f * g.dm / 2 * (PI * mu * g.dm * sec - g.l) / (PI * g.dm + mu * g.l * sec)) + col(f);
   const TR = raise(F), TL = lower(F), TRp = raise(Fp);
-  const eff = F * g.l / (2 * PI * TR), w = 2 * PI * g.N / 60, v = g.l * g.N / 60 / 1000;  // m/s
+  const eff = F * g.l / (2 * PI * TR), w = 2 * PI * g.N / 60, v = g.l * g.N / 60 / 1000;
   const Js = PI / 32 * 7850 * (g.L / 1000) * (g.dr / 1000) ** 4, alpha = 2 * PI * nv("acc") / (g.l / 1000);
   const Tpk = TRp / 1000 + Js * alpha, Tm = Tpk / (nv("gr") * eg);
   const sig = 4 * Fp / (PI * g.dr ** 2), tau = 16 * Tpk * 1000 / (PI * g.dr ** 3), vm = Math.sqrt(sig * sig + 3 * tau * tau), sfy = nv("sy") / vm;
