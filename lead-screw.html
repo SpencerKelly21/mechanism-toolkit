@@ -14,6 +14,26 @@
 .layout{grid-template-columns:1fr!important}
 svg{display:block;width:100%;height:auto;aspect-ratio:3.5/1}
 svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mute);text-anchor:middle}
+
+/* 2x4 Inputs Grid */
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px}
+.g4 label{font-size:13px;color:var(--mute)}
+.g4 input,.g4 select{width:100%;margin-top:3px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:15px}
+.g4 input:focus{outline:2px solid var(--belt)}
+@media (max-width:820px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.g4{grid-template-columns:1fr}}
+
+/* 3x2 Results Table */
+.res2col{width:100%;border-collapse:collapse;margin-top:8px}
+.res2col td{padding:6px 4px;border-top:1px solid var(--line)}
+.res2col td:nth-child(odd){font-weight:400;color:var(--mute);padding-left:0}
+.res2col td:nth-child(even){text-align:right;font-weight:600}
+.res2col td:nth-child(3){padding-left:28px}
+@media (max-width:640px){
+  .res2col tr{display:flex;flex-wrap:wrap;justify-content:space-between;border-top:1px solid var(--line);padding:4px 0}
+  .res2col td{border-top:0;width:48%}
+  .res2col td:nth-child(3){padding-left:0}
+}
 </style>
 </head>
 <body>
@@ -30,14 +50,16 @@ svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mu
 </header>
 
 <div class="layout">
-<!-- 1. Geometry Readout & Inputs Table (Top) -->
+<!-- 1. Controls, Readouts & 2-Column Geometry Results (Top Card) -->
 <div class="card">
 <div class="read">
 <div class="big"><small>Nut travel per screw revolution (lead)</small><b id="lead">–</b></div>
 <div><small>Lead angle</small><b id="lam">–</b></div>
 <div><small>Nut speed</small><b id="spd">–</b></div>
 </div>
-<div class="pgrid g2">
+
+<!-- Inputs arranged in 2 rows x 4 columns -->
+<div class="g4">
 <label>Thread type<select id="type"><option value="acme">ACME (29°)</option><option value="trap">Metric trapezoidal (30°)</option><option value="square">Square</option><option value="ball">Ball screw</option></select></label>
 <label>Major diameter d (mm)<input type="number" id="d" value="12" step="any" min="1" max="200"></label>
 <label>Lead l (mm/rev)<input type="number" id="lead_in" value="3" step="any" min="0.1" max="200"></label>
@@ -47,19 +69,22 @@ svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mu
 <label>End supports<select id="ends"><option value="fixfree">Fixed - free</option><option value="pinpin">Pinned - pinned</option><option value="fixpin" selected>Fixed - pinned</option><option value="fixfix">Fixed - fixed</option></select></label>
 <label>Screw speed (RPM)<input type="number" id="N" value="300" step="any" min="0" max="10000"></label>
 </div>
-<div id="gwarn"></div>
-<table class="res"><tbody id="gres"></tbody></table>
+
+<div id="gwarn" style="margin-top:12px"></div>
+
+<!-- Results arranged in 3 rows x 2 pairs -->
+<table class="res2col"><tbody id="gres"></tbody></table>
 </div>
 
-<!-- 2. Screw Animation (Middle) -->
-<div>
+<!-- 2. Screw Animation Canvas (Middle) -->
+<div style="margin-top:16px">
 <div class="sheet"><svg id="svg" role="img" aria-label="Lead screw turning while the nut travels along it"></svg></div>
 <div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="1000" step="1" value="0" aria-label="Nut position"><span id="angv"></span></div>
 <p class="note">The thread lines drift at the same speed as the nut, as on a rotating screw. One turn moves the nut by exactly one lead. Drawn to scale for the screw diameter.</p>
 </div>
 </div>
 
-<!-- 3. Physics Section (Bottom) -->
+<!-- 3. Physics Section (Bottom Card) -->
 <div class="card" id="phys" hidden style="margin-top:16px">
 <h2>Physics</h2>
 <div class="pwrap">
@@ -211,12 +236,24 @@ function update() {
   const W = [];
   if (g.dr < .6 * g.d) W.push("Deep thread: the root diameter is under 60% of the major diameter, so the screw core is weak.");
   $("gwarn").innerHTML = W.length ? W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No geometry warnings.</div>';
+  
   const rows = [
-    ["Pitch p = lead ÷ starts", fmt(g.p, 3) + " mm"], ["Mean diameter", fmt(g.dm, 3) + " mm"], ["Root diameter", fmt(g.dr, 3) + " mm"],
-    ["Thread half-angle", g.type === "ball" ? "n/a" : fmt(HALF[g.type], 1) + "°"], ["Nut turns engaged", fmt(g.Ln / g.p, 1)],
-    ["Revolutions per 100 mm", fmt(100 / g.l, 1)]
+    ["Pitch p = lead ÷ starts", fmt(g.p, 3) + " mm"], ["Mean diameter", fmt(g.dm, 3) + " mm"],
+    ["Root diameter", fmt(g.dr, 3) + " mm"], ["Thread half-angle", g.type === "ball" ? "n/a" : fmt(HALF[g.type], 1) + "°"],
+    ["Nut turns engaged", fmt(g.Ln / g.p, 1)], ["Revolutions per 100 mm", fmt(100 / g.l, 1)]
   ];
-  $("gres").innerHTML = rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+  
+  // Format into 3 rows x 2 column pairs
+  let html = "";
+  for (let i = 0; i < rows.length; i += 2) {
+    html += `<tr><td>${rows[i][0]}</td><td>${rows[i][1]}</td>`;
+    if (i + 1 < rows.length) {
+      html += `<td>${rows[i+1][0]}</td><td>${rows[i+1][1]}</td>`;
+    }
+    html += `</tr>`;
+  }
+  $("gres").innerHTML = html;
+  
   draw();
   if (!$("phys").hidden) physics(g);
 }
