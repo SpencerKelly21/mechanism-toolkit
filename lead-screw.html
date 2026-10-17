@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lead Screw Calculator</title>
+<meta name="description" content="Interactive lead screw calculator: thread geometry, torque to raise and lower, efficiency, self-locking, motor sizing, stress, buckling, critical speed and nut wear.">
+<meta name="theme-color" content="#12304a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/theme.css">
+<style>svg{display:block;width:100%;height:auto;aspect-ratio:5/2}svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mute);text-anchor:middle}</style>
+</head>
+<body>
+<main>
+<header>
+<h1><a class="back" href="index.html" aria-label="All mechanisms">←</a> Lead Screw</h1>
+<div class="grp">
+<div class="pair"><b>Mode</b><div class="seg" role="radiogroup" aria-label="Mode">
+<label><input type="radio" name="mode" value="geo" checked><span>Geometry</span></label>
+<label><input type="radio" name="mode" value="phys"><span>Physics</span></label>
+</div></div>
+<div id="themeSlot"></div>
+</div>
+</header>
+
+<div class="layout">
+<div>
+<div class="sheet"><svg id="svg" role="img" aria-label="Lead screw turning while the nut travels along it"></svg></div>
+<div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="1000" step="1" value="0" aria-label="Nut position"><span id="angv"></span></div>
+<p class="note">The thread lines drift at the same speed as the nut, as on a rotating screw. One turn moves the nut by exactly one lead. Drawn to scale for the screw diameter.</p>
+</div>
+<div class="card">
+<div class="read">
+<div class="big"><small>Nut travel per screw revolution (lead)</small><b id="lead">–</b></div>
+<div><small>Lead angle</small><b id="lam">–</b></div>
+<div><small>Nut speed</small><b id="spd">–</b></div>
+</div>
+<div class="pgrid g2">
+<label>Thread type<select id="type"><option value="acme">ACME (29°)</option><option value="trap">Metric trapezoidal (30°)</option><option value="square">Square</option><option value="ball">Ball screw</option></select></label>
+<label>Major diameter d (mm)<input type="number" id="d" value="12" step="any" min="1" max="200"></label>
+<label>Lead l (mm/rev)<input type="number" id="lead_in" value="3" step="any" min="0.1" max="200"></label>
+<label>Starts n<input type="number" id="starts" value="1" step="1" min="1" max="8"></label>
+<label>Nut length (mm)<input type="number" id="Ln" value="20" step="any" min="1" max="500"></label>
+<label>Unsupported length (mm)<input type="number" id="L" value="300" step="any" min="10" max="5000"></label>
+<label>End supports<select id="ends"><option value="fixfree">Fixed - free</option><option value="pinpin">Pinned - pinned</option><option value="fixpin" selected>Fixed - pinned</option><option value="fixfix">Fixed - fixed</option></select></label>
+<label>Screw speed (RPM)<input type="number" id="N" value="300" step="any" min="0" max="10000"></label>
+</div>
+<div id="gwarn"></div>
+<table class="res"><tbody id="gres"></tbody></table>
+</div>
+</div>
+
+<div class="card" id="phys" hidden style="margin-top:16px">
+<h2>Physics</h2>
+<div class="pwrap">
+<div class="pgrid">
+<label>Axial load F (N)<input type="number" id="F" value="500" step="any" min="0" max="1000000"></label>
+<label>Moved mass (kg)<input type="number" id="mass" value="5" step="any" min="0" max="10000"></label>
+<label>Peak acceleration (m/s²)<input type="number" id="acc" value="1" step="any" min="0" max="100"></label>
+<label id="lblMu">Thread friction μ<input type="number" id="mu" value="0.15" step="0.01" min="0.01" max="0.5"></label>
+<label id="lblEb" hidden>Ball screw efficiency (%)<input type="number" id="eb" value="90" step="any" min="1" max="100"></label>
+<label>Collar / bearing friction μc<input type="number" id="muc" value="0.02" step="0.01" min="0" max="0.5"></label>
+<label>Collar mean diameter (mm)<input type="number" id="dc" value="14" step="any" min="0" max="500"></label>
+<label>Gear ratio (motor : screw)<input type="number" id="gr" value="1" step="any" min="0.01" max="1000"></label>
+<label>Drive efficiency (%)<input type="number" id="eg" value="95" step="any" min="1" max="100"></label>
+<label>Motor steps per rev<input type="number" id="spr" value="200" step="1" min="1" max="10000"></label>
+<label>Microsteps<input type="number" id="us" value="16" step="1" min="1" max="256"></label>
+<label>Screw modulus E (GPa)<input type="number" id="E" value="200" step="any" min="1" max="500"></label>
+<label>Screw yield Sy (MPa)<input type="number" id="sy" value="350" step="any" min="10" max="3000"></label>
+<label>Allowable bearing pressure (MPa)<input type="number" id="pb" value="10" step="any" min="0.1" max="500"></label>
+<label>Allowable PV (MPa·m/s)<input type="number" id="pv" value="0.4" step="any" min="0.01" max="50"></label>
+</div>
+<div class="pout"><div id="pwarn"></div><table class="res"><tbody id="pres"></tbody></table></div>
+</div>
+<p class="note">A sizing estimate, not a certification. Material and wear limits are placeholders: use your nut and screw supplier's datasheet. Ball screw life (L10) needs the dynamic load rating and is not included.</p>
+<details class="how" open><summary>Formulas used</summary><ul>
+<li>Pitch p = l / n. Mean diameter d<sub>m</sub> = d − p/2. Root diameter d<sub>r</sub> = d − p. Lead angle λ = atan(l / π·d<sub>m</sub>).</li>
+<li>Torque to raise (drive against the load), with thread half-angle α: T<sub>R</sub> = (F·d<sub>m</sub>/2)·(l + π·μ·d<sub>m</sub>·secα) / (π·d<sub>m</sub> − μ·l·secα) + F·μ<sub>c</sub>·d<sub>c</sub>/2. Ball screw: T<sub>R</sub> = F·l / (2π·η) + collar term.</li>
+<li>Torque to lower: T<sub>L</sub> = (F·d<sub>m</sub>/2)·(π·μ·d<sub>m</sub>·secα − l) / (π·d<sub>m</sub> + μ·l·secα) + collar term. Positive means self-locking. Negative means the load back-drives, and the magnitude is the holding torque. Ball screw: T<sub>L</sub> = F·l/(2π)·(1/η − 2) + collar term.</li>
+<li>Efficiency e = F·l / (2π·T<sub>R</sub>). A screw with e below 50% tends to self-lock.</li>
+<li>Speed and power: v = l·N / 60, P<sub>in</sub> = T<sub>R</sub>·ω, P<sub>out</sub> = F·v.</li>
+<li>Peak force F<sub>pk</sub> = F + m·a. Screw inertia J<sub>s</sub> = (π/32)·ρ·L·d<sub>r</sub>⁴ and α = 2π·a / l. Motor torque = (T<sub>R</sub>(F<sub>pk</sub>) + J<sub>s</sub>·α) / (G·η<sub>drive</sub>).</li>
+<li>Screw stress: σ = 4F<sub>pk</sub> / (π·d<sub>r</sub>²), τ = 16T / (π·d<sub>r</sub>³), von Mises σ′ = √(σ² + 3τ²).</li>
+<li>Nut wear: bearing pressure p<sub>b</sub> = 2F<sub>pk</sub> / (π·d<sub>m</sub>·L<sub>n</sub>). Sliding speed v<sub>s</sub> = π·d<sub>m</sub>·N / (60·cosλ). PV = p<sub>b</sub>·v<sub>s</sub>.</li>
+<li>Buckling, with r = d<sub>r</sub>/4 and end factor K: Euler P<sub>cr</sub> = π²·E·I / (K·L)². If K·L/r is below √(2π²E/S<sub>y</sub>), use Johnson P<sub>cr</sub> = A·S<sub>y</sub>·(1 − S<sub>y</sub>·(K·L/r)² / (4π²E)).</li>
+<li>Critical (whirl) speed: N<sub>cr</sub> = (60/2π)·λ<sub>n</sub>²·(d<sub>r</sub>/4)·√(E/ρ) / L², with ρ = 7850 kg/m³ and λ<sub>n</sub> set by the end supports (1.875, π, 3.927 or 4.730).</li>
+<li>Resolution per microstep = l / (steps × microsteps × G).</li>
+</ul></details>
+</div>
+</main>
+
+<script src="shared/ui.js"></script>
+<script>
+const svg = $("svg");
+const ENDS = { fixfree: { lam: 1.875, K: 2 }, pinpin: { lam: Math.PI, K: 1 }, fixpin: { lam: 3.927, K: .7 }, fixfix: { lam: 4.73, K: .5 } };
+const HALF = { acme: 14.5, trap: 15, square: 0, ball: 0 };
+const SX = 16, EX = 384, Y0 = 60, H = 40, X0 = 40, RANGE = 150;
+let G = null, pos = 0, dir = 1, last = 0, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function geom() {
+  const d = val("d"), l = val("lead_in"), n = Math.round(val("starts")), Ln = val("Ln"), L = val("L"), N = val("N");
+  if (!(d > 0) || !(l > 0) || !(n >= 1) || !(Ln > 0) || !(L > 0) || !(N >= 0)) return null;
+  const p = l / n, dm = d - p / 2, dr = d - p, type = $("type").value;
+  if (!(dr > 0)) return { bad: "The pitch (lead ÷ starts) must be smaller than the major diameter." };
+  return { d, l, n, p, dm, dr, Ln, L, N, type, al: HALF[type] * Math.PI / 180, lam: Math.atan(l / (Math.PI * dm)) };
+}
+
+function draw() {
+  const g = G, sc = H / g.d, dx = g.l * sc / 2, pp = g.p * sc;
+  g.sc = sc; g.pp = pp;
+  let d = "";
+  if (pp >= 1.2) { const n = Math.ceil((EX - SX + dx + 2 * pp) / pp) + 1; for (let k = 0; k < n; k++) { const x = SX - dx - pp + k * pp; d += `M${x.toFixed(2)} ${Y0 + H}L${(x + dx).toFixed(2)} ${Y0}`; } }
+  svg.setAttribute("viewBox", "0 0 400 160");
+  svg.innerHTML =
+    `<defs><clipPath id="sc"><rect x="${SX}" y="${Y0}" width="${EX - SX}" height="${H}"/></clipPath></defs>` +
+    `<rect x="0" y="40" width="${SX}" height="80" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.2"/>` +
+    `<rect x="${EX}" y="48" width="16" height="64" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.2"/>` +
+    `<rect x="${SX}" y="${Y0}" width="${EX - SX}" height="${H}" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.5"/>` +
+    `<g clip-path="url(#sc)"><g id="thr"><path d="${d}" fill="none" stroke="var(--edge)" stroke-width="1" opacity=".75"/></g></g>` +
+    `<line x1="0" y1="${Y0 + H / 2}" x2="400" y2="${Y0 + H / 2}" stroke="var(--mute)" stroke-width=".7" stroke-dasharray="8 2 2 2"/>` +
+    `<g id="nutG"><rect x="${X0}" y="${Y0 - 22}" width="56" height="${H + 44}" fill="var(--sheet)"/><rect x="${X0}" y="${Y0 - 22}" width="56" height="${H + 44}" fill="var(--ifill)" stroke="var(--belt)" stroke-width="1.8"/><text x="${X0 + 28}" y="${Y0 - 8}">NUT</text></g>` +
+    `<text x="200" y="26">screw turns, nut slides</text>`;
+  apply();
+}
+
+// The nut and the thread pattern move together: one lead of nut travel per screw turn.
+function apply() {
+  if (!G) return;
+  const off = pos * RANGE, mm = off / G.sc, n = $("nutG"), t = $("thr");
+  if (n) n.setAttribute("transform", `translate(${off} 0)`);
+  if (t) t.setAttribute("transform", `translate(${off % G.pp} 0)`);
+  $("ang").value = pos * 1000;
+  $("angv").textContent = `${fmt(mm / G.l, 2)} turns, nut ${fmt(mm, 1)} mm`;
+}
+function setPlaying(on) { playing = on; $("play").textContent = on ? "Pause" : "Play"; }
+
+function physics(g) {
+  const nv = id => parseFloat($(id).value), ball = g.type === "ball", PI = Math.PI;
+  $("lblMu").hidden = ball; $("lblEb").hidden = !ball;
+  const ids = ["F", "mass", "acc", "muc", "dc", "gr", "eg", "spr", "us", "E", "sy", "pb", "pv"].concat(ball ? ["eb"] : ["mu"]);
+  if (ids.some(i => !(nv(i) >= 0)) || ["gr", "eg", "spr", "us", "E", "sy", "pb", "pv"].some(i => nv(i) <= 0) || (ball && nv("eb") <= 0)) {
+    $("pwarn").innerHTML = '<div class="pw">Enter a number in every field. Ratios, efficiencies, steps and material limits must be above zero.</div>';
+    $("pres").innerHTML = ""; return;
+  }
+  const F = nv("F"), Fp = F + nv("mass") * nv("acc"), mu = nv("mu"), muc = nv("muc"), dc = nv("dc");
+  const eb = Math.min(100, nv("eb")) / 100, eg = Math.min(100, nv("eg")) / 100, sec = 1 / Math.cos(g.al);
+  const col = f => f * muc * dc / 2;                                                    // N·mm
+  const raise = f => (ball ? f * g.l / (2 * PI * eb) : f * g.dm / 2 * (g.l + PI * mu * g.dm * sec) / (PI * g.dm - mu * g.l * sec)) + col(f);
+  const lower = f => (ball ? f * g.l / (2 * PI) * (1 / eb - 2) : f * g.dm / 2 * (PI * mu * g.dm * sec - g.l) / (PI * g.dm + mu * g.l * sec)) + col(f);
+  const TR = raise(F), TL = lower(F), TRp = raise(Fp);
+  const eff = F * g.l / (2 * PI * TR), w = 2 * PI * g.N / 60, v = g.l * g.N / 60 / 1000;  // m/s
+  const Js = PI / 32 * 7850 * (g.L / 1000) * (g.dr / 1000) ** 4, alpha = 2 * PI * nv("acc") / (g.l / 1000);
+  const Tpk = TRp / 1000 + Js * alpha, Tm = Tpk / (nv("gr") * eg);
+  const sig = 4 * Fp / (PI * g.dr ** 2), tau = 16 * Tpk * 1000 / (PI * g.dr ** 3), vm = Math.sqrt(sig * sig + 3 * tau * tau), sfy = nv("sy") / vm;
+  const pbr = 2 * Fp / (PI * g.dm * g.Ln), vs = PI * g.dm / 1000 * g.N / 60 / Math.cos(g.lam), PV = pbr * vs;
+  const e = ENDS[$("ends").value], E = nv("E") * 1000, sy = nv("sy"), r = g.dr / 4, sl = e.K * g.L / r, sl1 = Math.sqrt(2 * PI * PI * E / sy);
+  const A = PI * g.dr ** 2 / 4, I = PI * g.dr ** 4 / 64;
+  const Pcr = sl > sl1 ? PI * PI * E * I / (e.K * g.L) ** 2 : A * sy * (1 - sy * sl * sl / (4 * PI * PI * E)), sfb = Pcr / Fp;
+  const Ncr = 60 / (2 * PI) * e.lam ** 2 * (g.dr / 4000) * Math.sqrt(nv("E") * 1e9 / 7850) / (g.L / 1000) ** 2;
+  const sf = x => isFinite(x) ? fmt(x, 1) : "∞", locks = TL > 0;
+
+  const W = [];
+  if (sfy < 1) W.push("Screw stress exceeds yield."); else if (sfy < 2) W.push("Low screw strength margin. Aim for a safety factor of 2 or more.");
+  if (sfb < 1) W.push("The screw would buckle under this compressive load."); else if (sfb < 3) W.push("Low buckling margin. Aim for a safety factor of 3 or more, or shorten and support the screw.");
+  if (g.N > .8 * Ncr) W.push("Operating speed is above 80% of the critical speed. Whirl vibration is likely.");
+  if (!ball && pbr > nv("pb")) W.push("Nut bearing pressure exceeds the allowable.");
+  if (!ball && PV > nv("pv")) W.push("PV exceeds the allowable. The nut will wear or overheat quickly.");
+  if (!locks) W.push(`Not self-locking: it back-drives. A vertical load needs a brake or at least ${fmt(-TL / 1000, 3)} N·m of holding torque.`);
+  $("pwarn").innerHTML = W.length ? W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No warnings.</div>';
+
+  const rows = [
+    ["Torque to raise, steady (thread + collar)", fmt((TR - col(F)) / 1000, 3) + " + " + fmt(col(F) / 1000, 3) + " N·m"],
+    ["Efficiency", fmt(eff * 100, 1) + " %"],
+    ["Torque to lower", fmt(TL / 1000, 3) + " N·m " + (locks ? "(self-locking)" : "(back-drives)")],
+    ["Thread alone self-locks", ball ? "no (rolling contact)" : (mu * sec > Math.tan(g.lam) ? "yes" : "no")],
+    ["Power in / out", fmt(TR / 1000 * w, 1) + " / " + fmt(F * v, 1) + " W"],
+    ["Peak torque incl. acceleration", fmt(Tpk, 3) + " N·m"],
+    ["Motor torque / speed", fmt(Tm, 3) + " N·m / " + fmt(g.N * nv("gr"), 0) + " RPM"],
+    ["Axial / shear / von Mises", fmt(sig, 1) + " / " + fmt(tau, 1) + " / " + fmt(vm, 1) + " MPa"],
+    ["Yield safety factor", sf(sfy)],
+    ["Nut bearing pressure", ball ? "n/a" : fmt(pbr, 2) + " MPa (limit " + fmt(nv("pb"), 1) + ")"],
+    ["PV (pressure × sliding speed)", ball ? "n/a" : fmt(PV, 3) + " MPa·m/s (limit " + fmt(nv("pv"), 2) + ")"],
+    ["Buckling load / safety factor", fmt(Pcr, 0) + " N / " + sf(sfb)],
+    ["Critical speed / operating", fmt(Ncr, 0) + " RPM / " + fmt(g.N / Ncr * 100, 1) + " %"],
+    ["Resolution per microstep", fmt(g.l / (nv("spr") * nv("us") * nv("gr")), 5) + " mm"]
+  ];
+  $("pres").innerHTML = rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+}
+
+function update() {
+  $("phys").hidden = document.querySelector("input[name=mode]:checked").value !== "phys";
+  const g = geom();
+  if (!g || g.bad) {
+    G = null; svg.innerHTML = "";
+    ["lead", "lam", "spd"].forEach(i => $(i).textContent = "–"); $("gres").innerHTML = "";
+    $("gwarn").innerHTML = `<div class="pw">${g ? g.bad : "Enter a positive number in every field."}</div>`;
+    return;
+  }
+  G = g;
+  $("lead").textContent = fmt(g.l, 2) + " mm";
+  $("lam").textContent = fmt(g.lam * 180 / Math.PI, 2) + "°";
+  $("spd").textContent = fmt(g.l * g.N / 60, 1) + " mm/s";
+  const W = [];
+  if (g.dr < .6 * g.d) W.push("Deep thread: the root diameter is under 60% of the major diameter, so the screw core is weak.");
+  $("gwarn").innerHTML = W.length ? W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No geometry warnings.</div>';
+  const rows = [
+    ["Pitch p = lead ÷ starts", fmt(g.p, 3) + " mm"], ["Mean diameter", fmt(g.dm, 3) + " mm"], ["Root diameter", fmt(g.dr, 3) + " mm"],
+    ["Thread half-angle", g.type === "ball" ? "n/a" : fmt(HALF[g.type], 1) + "°"], ["Nut turns engaged", fmt(g.Ln / g.p, 1)],
+    ["Revolutions per 100 mm", fmt(100 / g.l, 1)]
+  ];
+  $("gres").innerHTML = rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+  draw();
+  if (!$("phys").hidden) physics(g);
+}
+
+const TIPS = {
+  type: "ACME and trapezoidal threads slide with friction and can self-lock. Square threads have the least friction. Ball screws roll, so they are efficient and back-drive.",
+  d: "Outside (major) diameter of the screw thread.",
+  lead_in: "Axial distance the nut moves per screw revolution. Lead = pitch × number of starts.",
+  starts: "Number of parallel thread starts. More starts give a larger lead at the same pitch.",
+  Ln: "Length of the nut along the screw. Longer nuts spread the load and cut bearing pressure.",
+  L: "Distance between screw supports. It drives buckling and critical speed, so keep it short.",
+  ends: "How the screw ends are held. Fixed ends are stiffer, so they raise both buckling load and critical speed.",
+  N: "Screw rotation speed. Sets nut speed, sliding speed and the whirl check.",
+  F: "Steady axial force the nut must push or hold.",
+  mass: "Mass accelerated along the screw. Adds m·a to the peak force.",
+  acc: "Peak linear acceleration of the moved mass.",
+  mu: "Friction between the screw and nut threads. About 0.1 to 0.2 for steel on bronze or plastic when lubricated.",
+  eb: "Overall ball screw efficiency, typically 85 to 95%.",
+  muc: "Friction at the thrust collar or bearing. About 0.01 for a ball thrust bearing, 0.1 or more for a plain washer.",
+  dc: "Mean diameter of the thrust collar or bearing contact. Sets the collar friction torque F·μc·dc/2.",
+  gr: "Reduction between motor and screw. 2 means the motor turns twice per screw turn.",
+  eg: "Efficiency of the gearbox or belt between motor and screw.",
+  spr: "Full steps per motor revolution, 200 for a 1.8° stepper.",
+  us: "Microstepping factor of the driver.",
+  E: "Elastic modulus of the screw. About 200 GPa for steel.",
+  sy: "Yield strength of the screw material. Used for stress and the Johnson buckling check.",
+  pb: "Allowable thread bearing pressure on the nut. Roughly 10 MPa for bronze and 3 to 5 MPa for plastic nuts at low speed.",
+  pv: "Allowable pressure × sliding speed. A placeholder: take it from the nut maker's datasheet."
+};
+
+document.querySelectorAll("main input:not(#ang):not([name=theme]), main select").forEach(el => el.addEventListener("input", update));
+clampInputs("main input[type=number]", update);
+initTips(TIPS);
+$("play").addEventListener("click", () => setPlaying(!playing));
+$("ang").addEventListener("input", () => { setPlaying(false); pos = +$("ang").value / 1000; apply(); });
+function tick(t) {
+  if (playing && last && G) { pos += dir * (t - last) / 6000; if (pos >= 1) { pos = 1; dir = -1; } else if (pos <= 0) { pos = 0; dir = 1; } apply(); }
+  last = t; requestAnimationFrame(tick);
+}
+setPlaying(playing);
+update();
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>
