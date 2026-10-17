@@ -43,13 +43,15 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 .rk{animation:rk 3s linear infinite alternate}
 .rp{animation:rp 3s linear infinite alternate}
 .fol{animation:fol 6s linear infinite}
-.tile .spin,.tile .rk,.tile .rp,.tile .fol{animation-play-state:paused}
-.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol{animation-play-state:running}
+.ls{animation:ls 3s linear infinite alternate}
+.tile .spin,.tile .rk,.tile .rp,.tile .fol,.tile .ls{animation-play-state:paused}
+.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol,.tile:hover .ls,.tile:focus-visible .ls{animation-play-state:running}
 @keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
 @keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
+@keyframes ls{from{transform:translateX(-12px)}to{transform:translateX(12px)}}
 @keyframes rk{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
 @keyframes rp{from{transform:rotate(61.35deg)}to{transform:rotate(118.65deg)}}
-@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
+@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol,.ls{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
 @media (max-width:760px){.hero{margin-top:24px}#hero{justify-self:center;margin:12px 0 0;max-width:340px}}
 @media (max-width:520px){main{padding:10px}.plate{padding:22px 16px 18px}}
 </style>
@@ -69,7 +71,7 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <div class="tiles">
 <a class="tile" href="belt.html" style="--c:var(--belt)"><span class="fig">FIG. 01</span><svg class="ico" viewBox="0 0 64 64" data-icon="belt"></svg><h2>Belt drive</h2><p>Layout, belt length, wrap angles, tension and slip.</p><span class="go">Open →</span></a>
 <a class="tile" href="rack-pinion.html" style="--c:#3a86ff"><span class="fig">FIG. 02</span><svg class="ico" viewBox="0 0 64 64" data-icon="rack"></svg><h2>Rack and pinion</h2><p>Involute meshing, contact ratio, forces, motor torque and tooth stress.</p><span class="go">Open →</span></a>
-<div class="tile soon" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking and critical speed.</p><span class="go">Planned</span></div>
+<a class="tile" href="lead-screw.html" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking, buckling and critical speed.</p><span class="go">Open →</span></a>
 <div class="tile soon" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof check, transmission angle and coupler curves.</p><span class="go">Planned</span></div>
 <div class="tile soon" style="--c:#d6479b"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
 <div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
@@ -120,7 +122,11 @@ const ICONS = {
     d += `V47Z`;
     return `<g class="rk"><path d="${d}" ${line} stroke-linejoin="miter"/></g><g transform="translate(32,26)"><g class="rp"><path d="${gearD(8, 3)}" ${line}/><circle r="3" ${line}/></g></g>`;
   },
-  screw: () => `<rect x="10" y="24" width="40" height="16" ${line}/><path d="M18 24l6 16M26 24l6 16M34 24l6 16M42 24l6 16" ${line}/><rect x="28" y="16" width="12" height="32" ${line}/>`,
+  screw: () => {
+    let d = "";
+    for (let x = -26; x <= 82; x += 8) d += `M${x} 38L${x + 4} 26`; // extra length so both ends stay covered while the lines slide ±12
+    return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} stroke-width="1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
+  },
   four: () => `<path d="M10 52L22 18L46 24L54 52" ${line}/><path d="M6 52h12M50 52h12" ${line}/><g fill="var(--panel)"><circle cx="10" cy="52" r="3" ${line}/><circle cx="22" cy="18" r="3" ${line}/><circle cx="46" cy="24" r="3" ${line}/><circle cx="54" cy="52" r="3" ${line}/></g>`,
   // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
   cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
