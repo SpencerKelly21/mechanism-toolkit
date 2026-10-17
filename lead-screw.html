@@ -30,6 +30,10 @@
 <div class="sheet"><svg id="svg" role="img" aria-label="Lead screw turning while the nut travels along it"></svg></div>
 <div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="1000" step="1" value="0" aria-label="Nut position"><span id="angv"></span></div>
 <p class="note">The thread lines drift at the same speed as the nut, as on a rotating screw. One turn moves the nut by exactly one lead. Drawn to scale for the screw diameter.</p>
+<div class="card" style="margin-top:12px">
+<div id="gwarn"></div>
+<table class="res"><tbody id="gres"></tbody></table>
+</div>
 </div>
 <div class="card">
 <div class="read">
@@ -47,8 +51,6 @@
 <label>End supports<select id="ends"><option value="fixfree">Fixed - free</option><option value="pinpin">Pinned - pinned</option><option value="fixpin" selected>Fixed - pinned</option><option value="fixfix">Fixed - fixed</option></select></label>
 <label>Screw speed (RPM)<input type="number" id="N" value="300" step="any" min="0" max="10000"></label>
 </div>
-<div id="gwarn"></div>
-<table class="res"><tbody id="gres"></tbody></table>
 </div>
 </div>
 
@@ -97,7 +99,7 @@ const svg = $("svg");
 const ENDS = { fixfree: { lam: 1.875, K: 2 }, pinpin: { lam: Math.PI, K: 1 }, fixpin: { lam: 3.927, K: .7 }, fixfix: { lam: 4.73, K: .5 } };
 const HALF = { acme: 14.5, trap: 15, square: 0, ball: 0 };
 const SX = 16, EX = 384, Y0 = 60, H = 40, X0 = 40, RANGE = 150;
-let G = null, pos = 0, dir = 1, last = 0, playing = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+let G = null, pos = 0, dir = 1, last = 0, playing = false;
 
 function geom() {
   const d = val("d"), l = val("lead_in"), n = Math.round(val("starts")), Ln = val("Ln"), L = val("L"), N = val("N");
