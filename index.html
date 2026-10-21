@@ -9,7 +9,77 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/theme.css">
+<style>
+/* Shared look for every mechanism page: four themes plus common components. */
+:root{--paper:#eef3f7;--sheet:#eef3f7;--grid:#d2dde6;--panel:#fbfdff;--ink:#12304a;--mute:#5b7388;--line:#c5d2dd;--belt:#e8541a;--fill:rgba(18,48,74,.09);--ifill:rgba(232,84,26,.14);--edge:#12304a;--label:#12304a;--bad:#c0392b;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root[data-theme="blueprint"]{--paper:#0f2b4a;--sheet:#0f2b4a;--grid:#1d4266;--panel:#123658;--ink:#e6f0fa;--mute:#93b0cb;--line:#2a5379;--belt:#ffa63d;--fill:rgba(230,240,250,.08);--ifill:rgba(255,166,61,.16);--edge:#e6f0fa;--label:#e6f0fa;--bad:#ff8a7a}
+:root[data-theme="chalkboard"]{--paper:#10261f;--sheet:#173529;--grid:#25493a;--panel:#14302a;--ink:#eaf3ec;--mute:#9fbfaa;--line:#2c5041;--belt:#f4f1e6;--fill:rgba(255,255,255,.07);--ifill:rgba(250,204,21,.2);--edge:#eaf3ec;--label:#eaf3ec;--bad:#ffab9c}
+:root[data-theme="graphite"]{--paper:#1b1d21;--sheet:#23262b;--grid:#32363d;--panel:#25282d;--ink:#e9ecef;--mute:#9aa1a9;--line:#383c43;--belt:#3ddc97;--fill:rgba(255,255,255,.06);--ifill:rgba(61,220,151,.16);--edge:#e9ecef;--label:#e9ecef;--bad:#ff8a7a}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.4 "Barlow Semi Condensed",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:1060px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{font-size:22px;font-weight:700;margin:0;letter-spacing:.01em}
+.back{color:var(--mute);text-decoration:none;margin-right:4px}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
+.seg label{margin:0;cursor:pointer}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;padding:6px 14px;font-weight:500;border-left:1.5px solid var(--ink)}
+.seg label:first-child span{border-left:0}
+.seg input:checked+span{background:var(--ink);color:var(--paper)}
+.seg input:focus-visible+span{outline:2px solid var(--belt);outline-offset:-4px}
+.pair{display:flex;gap:10px;align-items:center}
+.grp{display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap}
+.grp b{font-weight:500;color:var(--mute);font-size:14px}
+.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:820px){.layout{grid-template-columns:1fr}}
+.sheet{border:1.5px solid var(--ink);border-radius:4px;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.card h2{font-size:16px;margin:0 0 10px}
+.read{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:12px}
+.read .big{grid-column:1/-1;border-bottom:1.5px solid var(--ink);padding-bottom:8px;margin-bottom:4px}
+.read small{display:block;color:var(--mute);font-size:14px}
+.read .big b{font-size:44px;line-height:1.05;font-weight:700;color:var(--belt)}
+.read b{font-size:24px;font-weight:600}
+.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
+.pgrid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:560px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pgrid label{font-size:13px;color:var(--mute)}
+.pgrid input,.pgrid select{width:100%;margin-top:3px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:15px}
+.pgrid input:focus,.pgrid select:focus,.btn:focus-visible{outline:2px solid var(--belt)}
+.pwrap{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:860px){.pwrap{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse}
+.res td{padding:6px 4px;border-top:1px solid var(--line)}
+.res td:first-child{color:var(--mute)}
+.res td:last-child{text-align:right;font-weight:600}
+.pw{color:var(--bad);font-weight:600;margin-top:10px;font-size:14px}
+.pok{color:var(--mute);margin-top:10px;font-size:14px}
+.pout .pw:first-child,.pout .pok:first-child{margin-top:0}
+.note{color:var(--mute);font-size:13px;margin:8px 0 0}
+.how{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.how summary{cursor:pointer;font-weight:600}
+.how li{margin:6px 0;font-size:14.5px;line-height:1.5}
+.btn{font:inherit;font-weight:600;padding:6px 14px;border:1.5px solid var(--ink);border-radius:6px;background:none;color:var(--ink);cursor:pointer}
+.ctl{display:flex;gap:12px;align-items:center;margin-top:10px}
+.ctl input[type=range]{flex:1;accent-color:var(--belt)}
+.ctl span{min-width:150px;text-align:right;color:var(--mute);font-size:14px}
+.tip{width:15px;height:15px;border-radius:50%;border:1px solid var(--mute);background:none;color:var(--mute);font:600 10px/1 "Barlow Semi Condensed",system-ui,sans-serif;padding:0;margin-left:5px;cursor:help;vertical-align:1px}
+.tip:hover,.tip:focus-visible{color:var(--belt);border-color:var(--belt);outline:0}
+.tipbox{position:fixed;z-index:10;max-width:250px;padding:8px 10px;border-radius:6px;background:var(--ink);color:var(--paper);font-size:13px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:none}
+@media (max-width:520px){
+.pair{flex-wrap:wrap;gap:6px 10px}
+.seg:has(label:nth-child(4)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.seg:has(label:nth-child(4)) span{text-align:center}
+.seg:has(label:nth-child(4)) label:nth-child(odd) span{border-left:0}
+.seg:has(label:nth-child(4)) label:nth-child(n+3) span{border-top:1.5px solid var(--ink)}
+.ctl{flex-wrap:wrap}
+.ctl span{min-width:0;flex-basis:100%;text-align:left}
+}
+[hidden]{display:none!important}
+</style>
 <style>
 .plate{position:relative;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;border:2px solid var(--ink);padding:30px 28px 24px}
 .plate::before{content:"";position:absolute;inset:7px;border:1px solid var(--ink);pointer-events:none}
@@ -44,14 +114,16 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 .rp{animation:rp 3s linear infinite alternate}
 .fol{animation:fol 6s linear infinite}
 .ls{animation:ls 3s linear infinite alternate}
-.tile .spin,.tile .rk,.tile .rp,.tile .fol,.tile .ls{animation-play-state:paused}
-.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol,.tile:hover .ls,.tile:focus-visible .ls{animation-play-state:running}
+.fb2{animation:fb2 6s linear infinite}
+.fb3{animation:fb3 6s linear infinite}
+.tile .spin,.tile .rk,.tile .rp,.tile .fol,.tile .ls,.tile .fb2,.tile .fb3{animation-play-state:paused}
+.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol,.tile:hover .ls,.tile:focus-visible .ls,.tile:hover .fb2,.tile:focus-visible .fb2,.tile:hover .fb3,.tile:focus-visible .fb3{animation-play-state:running}
 @keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
 @keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
 @keyframes ls{from{transform:translateX(-12px)}to{transform:translateX(12px)}}
 @keyframes rk{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
 @keyframes rp{from{transform:rotate(61.35deg)}to{transform:rotate(118.65deg)}}
-@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol,.ls{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
+@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol,.ls,.fb2,.fb3{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
 @media (max-width:760px){.hero{margin-top:24px}#hero{justify-self:center;margin:12px 0 0;max-width:340px}}
 @media (max-width:520px){main{padding:10px}.plate{padding:22px 16px 18px}}
 </style>
@@ -72,14 +144,80 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <a class="tile" href="belt.html" style="--c:var(--belt)"><span class="fig">FIG. 01</span><svg class="ico" viewBox="0 0 64 64" data-icon="belt"></svg><h2>Belt drive</h2><p>Layout, belt length, wrap angles, tension and slip.</p><span class="go">Open →</span></a>
 <a class="tile" href="rack-pinion.html" style="--c:#3a86ff"><span class="fig">FIG. 02</span><svg class="ico" viewBox="0 0 64 64" data-icon="rack"></svg><h2>Rack and pinion</h2><p>Involute meshing, contact ratio, forces, motor torque and tooth stress.</p><span class="go">Open →</span></a>
 <a class="tile" href="lead-screw.html" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking, buckling and critical speed.</p><span class="go">Open →</span></a>
-<div class="tile soon" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof check, transmission angle and coupler curves.</p><span class="go">Planned</span></div>
+<a class="tile" href="four-bar.html" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof type, coupler curves, transmission angle and quick-return.</p><span class="go">Open →</span></a>
 <div class="tile soon" style="--c:#d6479b"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
 <div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
 </div>
 <footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
 </div>
 </main>
-<script src="shared/ui.js"></script>
+<script>
+// Shared by every mechanism page: helpers, theme switcher, help popouts, input clamping.
+const $ = id => document.getElementById(id);
+const TP = 2 * Math.PI;
+const val = id => parseFloat($(id).value);
+const fmt = (x, d = 2) => isFinite(x) ? x.toFixed(d) : "–";
+
+const THEMES = [["drafting", "Drafting"], ["blueprint", "Blueprint"], ["chalkboard", "Chalkboard"], ["graphite", "Graphite"]];
+const THEME_KEY = "beltTheme"; // same key the belt page uses, so the choice carries across pages
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  const r = document.querySelector('input[name=theme][value="' + t + '"]');
+  if (r) r.checked = true;
+  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
+}
+function initTheme() {
+  const slot = $("themeSlot");
+  if (slot) slot.innerHTML = `<div class="pair"><b>Theme</b><div class="seg" role="radiogroup" aria-label="Theme">${THEMES.map(([v, n]) => `<label><input type="radio" name="theme" value="${v}"><span>${n}</span></label>`).join("")}</div></div>`;
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+  setTheme(THEMES.some(t => t[0] === saved) ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "blueprint" : "drafting"));
+  document.querySelectorAll("input[name=theme]").forEach(r => r.addEventListener("change", () => setTheme(r.value)));
+}
+
+// Snap typed values back into each field's min/max, then call cb.
+function clampInputs(sel, cb) {
+  document.querySelectorAll(sel).forEach(el => el.addEventListener("change", () => {
+    const lo = parseFloat(el.min), hi = parseFloat(el.max), v = parseFloat(el.value);
+    if (!isFinite(v)) return;
+    const c = Math.min(isFinite(hi) ? hi : Infinity, Math.max(isFinite(lo) ? lo : -Infinity, v));
+    if (c !== v) { el.value = c; cb(); }
+  }));
+}
+
+// Adds a "?" popout beside each labelled input. TIPS maps input id -> help text.
+function initTips(TIPS) {
+  const box = document.createElement("div");
+  box.className = "tipbox"; box.hidden = true; document.body.appendChild(box);
+  let cur = null;
+  const hide = () => { box.hidden = true; cur = null; };
+  const show = b => {
+    box.textContent = b.dataset.tip; box.hidden = false; cur = b;
+    const r = b.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+    box.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + "px";
+    box.style.top = (r.bottom + h + 12 > innerHeight ? r.top - h - 6 : r.bottom + 6) + "px";
+  };
+  for (const id in TIPS) {
+    const el = $(id); if (!el) continue;
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "tip"; b.textContent = "?"; b.dataset.tip = TIPS[id];
+    b.setAttribute("aria-label", "About " + el.parentElement.firstChild.textContent.trim());
+    el.before(b);
+  }
+  const canHover = matchMedia("(hover: hover)").matches;
+  document.addEventListener("click", e => {
+    const b = e.target.closest(".tip");
+    if (!b) return hide();
+    e.preventDefault();
+    if (canHover || cur !== b) show(b); else hide();
+  });
+  if (canHover) document.addEventListener("mouseover", e => { const b = e.target.closest(".tip"); if (b) show(b); else if (cur) hide(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+  addEventListener("scroll", hide, true);
+}
+
+initTheme();
+</script>
 <script>
 const TAU = 2 * Math.PI, byId = id => document.getElementById(id);
 // Involute spur-gear outline centred on the origin, tooth 0 on +x. Teeth are 8% thinner than the gap pitch for backlash.
@@ -127,7 +265,7 @@ const ICONS = {
     for (let x = -26; x <= 82; x += 8) d += `M${x} 38L${x + 4} 26`; // extra length so both ends stay covered while the lines slide ±12
     return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} stroke-width="1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
   },
-  four: () => `<path d="M10 52L22 18L46 24L54 52" ${line}/><path d="M6 52h12M50 52h12" ${line}/><g fill="var(--panel)"><circle cx="10" cy="52" r="3" ${line}/><circle cx="22" cy="18" r="3" ${line}/><circle cx="46" cy="24" r="3" ${line}/><circle cx="54" cy="52" r="3" ${line}/></g>`,
+  four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="8" y2="0" ${line} stroke-width="3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
   // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
   cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
   motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
@@ -139,6 +277,24 @@ const ICONS = {
     kf.push(`${(100 * k / N).toFixed(2)}%{transform:translateY(${(R + rho + e - y).toFixed(3)}px)}`);
   }
   const st = document.createElement("style"); st.textContent = "@keyframes fol{" + kf.join("") + "}"; document.head.appendChild(st);
+}
+{
+  // Icon crank-rocker: pivots 32 apart, links 8 / 26 / 22, screen coordinates (y down), crank turning clockwise.
+  const d = 32, r2 = 8, r3 = 26, r4 = 22, N = 36, k3 = [], k2 = [];
+  let a3p = null, a4p = null;
+  const unw = (a, p) => { if (p === null) return a; while (a - p > Math.PI) a -= TAU; while (a - p < -Math.PI) a += TAU; return a; };
+  for (let k = 0; k <= N; k++) {
+    const t = -TAU * k / N, Ax = r2 * Math.cos(t), Ay = r2 * Math.sin(t), dx = d - Ax, dy = -Ay, D = Math.hypot(dx, dy);
+    const a = (r3 * r3 - r4 * r4 + D * D) / (2 * D), h = Math.sqrt(r3 * r3 - a * a);
+    const Bx = Ax + a * dx / D - h * dy / D, By = Ay + a * dy / D + h * dx / D;
+    a3p = unw(Math.atan2(-By + Ay, Bx - Ax), a3p); a4p = unw(Math.atan2(-By, Bx - d), a4p);
+    const pc = (100 * k / N).toFixed(2);
+    k3.push(`${pc}%{transform:translate(${Ax.toFixed(3)}px,${(-Ay).toFixed(3)}px) rotate(${(a3p * 180 / Math.PI).toFixed(2)}deg)}`);
+    k2.push(`${pc}%{transform:rotate(${(a4p * 180 / Math.PI).toFixed(2)}deg)}`);
+  }
+  const st2 = document.createElement("style");
+  st2.textContent = `@keyframes fb3{${k3.join("")}}@keyframes fb2{${k2.join("")}}@media (prefers-reduced-motion:reduce){.fb3{transform:${k3[0].match(/\{transform:(.*)\}/)[1]}}.fb2{transform:${k2[0].match(/\{transform:(.*)\}/)[1]}}}`;
+  document.head.appendChild(st2);
 }
 document.querySelectorAll("[data-icon]").forEach(s => s.innerHTML = ICONS[s.dataset.icon]());
 </script>
