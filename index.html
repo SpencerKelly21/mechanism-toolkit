@@ -265,7 +265,7 @@ const ICONS = {
     for (let x = -26; x <= 82; x += 8) d += `M${x} 38L${x + 4} 26`; // extra length so both ends stay covered while the lines slide ±12
     return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} stroke-width="1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
   },
-  four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="8" y2="0" ${line} stroke-width="3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
+  four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="11" y2="0" ${line} stroke-width="3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
   // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
   cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
   motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
@@ -279,8 +279,8 @@ const ICONS = {
   const st = document.createElement("style"); st.textContent = "@keyframes fol{" + kf.join("") + "}"; document.head.appendChild(st);
 }
 {
-  // Icon crank-rocker: pivots 32 apart, links 8 / 26 / 22, screen coordinates (y down), crank turning clockwise.
-  const d = 32, r2 = 8, r3 = 26, r4 = 22, N = 36, k3 = [], k2 = [];
+  // Icon crank-rocker: pivots 32 apart, links 11 / 26 / 22, screen coordinates (y down), crank turning clockwise.
+  const d = 32, r2 = 11, r3 = 26, r4 = 22, N = 36, k3 = [], k2 = [];
   let a3p = null, a4p = null;
   const unw = (a, p) => { if (p === null) return a; while (a - p > Math.PI) a -= TAU; while (a - p < -Math.PI) a += TAU; return a; };
   for (let k = 0; k <= N; k++) {
