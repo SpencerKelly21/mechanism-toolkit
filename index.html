@@ -11,11 +11,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
 <style>
 /* Shared look for every mechanism page: four themes plus common components. */
-:root{--paper:#eef3f7;--sheet:#eef3f7;--grid:#d2dde6;--panel:#fbfdff;--ink:#12304a;--mute:#5b7388;--line:#c5d2dd;--belt:#e8541a;--fill:rgba(18,48,74,.09);--ifill:rgba(232,84,26,.14);--edge:#12304a;--label:#12304a;--bad:#c0392b;
+:root{--paper:#eef3f7;--sheet:#eef3f7;--grid:#d2dde6;--panel:#fbfdff;--ink:#12304a;--mute:#5b7388;--line:#c5d2dd;--belt:#e8541a;--fill:rgba(18,48,74,.09);--ifill:rgba(232,84,26,.14);--edge:#12304a;--label:#12304a;--bad:#c0392b;--cant:#7a9a1e;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-:root[data-theme="blueprint"]{--paper:#0f2b4a;--sheet:#0f2b4a;--grid:#1d4266;--panel:#123658;--ink:#e6f0fa;--mute:#93b0cb;--line:#2a5379;--belt:#ffa63d;--fill:rgba(230,240,250,.08);--ifill:rgba(255,166,61,.16);--edge:#e6f0fa;--label:#e6f0fa;--bad:#ff8a7a}
-:root[data-theme="chalkboard"]{--paper:#10261f;--sheet:#173529;--grid:#25493a;--panel:#14302a;--ink:#eaf3ec;--mute:#9fbfaa;--line:#2c5041;--belt:#f4f1e6;--fill:rgba(255,255,255,.07);--ifill:rgba(250,204,21,.2);--edge:#eaf3ec;--label:#eaf3ec;--bad:#ffab9c}
-:root[data-theme="graphite"]{--paper:#1b1d21;--sheet:#23262b;--grid:#32363d;--panel:#25282d;--ink:#e9ecef;--mute:#9aa1a9;--line:#383c43;--belt:#3ddc97;--fill:rgba(255,255,255,.06);--ifill:rgba(61,220,151,.16);--edge:#e9ecef;--label:#e9ecef;--bad:#ff8a7a}
+:root[data-theme="blueprint"]{--paper:#0f2b4a;--sheet:#0f2b4a;--grid:#1d4266;--panel:#123658;--ink:#e6f0fa;--mute:#93b0cb;--line:#2a5379;--belt:#ffa63d;--fill:rgba(230,240,250,.08);--ifill:rgba(255,166,61,.16);--edge:#e6f0fa;--label:#e6f0fa;--bad:#ff8a7a;--cant:#b8e04a}
+:root[data-theme="chalkboard"]{--paper:#10261f;--sheet:#173529;--grid:#25493a;--panel:#14302a;--ink:#eaf3ec;--mute:#9fbfaa;--line:#2c5041;--belt:#f4f1e6;--fill:rgba(255,255,255,.07);--ifill:rgba(250,204,21,.2);--edge:#eaf3ec;--label:#eaf3ec;--bad:#ffab9c;--cant:#f0a30a}
+:root[data-theme="graphite"]{--paper:#1b1d21;--sheet:#23262b;--grid:#32363d;--panel:#25282d;--ink:#e9ecef;--mute:#9aa1a9;--line:#383c43;--belt:#3ddc97;--fill:rgba(255,255,255,.06);--ifill:rgba(61,220,151,.16);--edge:#e9ecef;--label:#e9ecef;--bad:#ff8a7a;--cant:#f5a524}
 *{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.4 "Barlow Semi Condensed",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
@@ -146,7 +146,8 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <a class="tile" href="lead-screw.html" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking, buckling and critical speed.</p><span class="go">Open →</span></a>
 <a class="tile" href="four-bar.html" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof type, coupler curves, transmission angle and quick-return.</p><span class="go">Open →</span></a>
 <div class="tile soon" style="--c:#d6479b"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
-<div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
+<a class="tile" href="cantilever.html" style="--c:var(--cant)"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="cant"></svg><h2>Cantilever beam</h2><p>Bending stress, safety factor, tip deflection, and shear, moment and deflection graphs.</p><span class="go">Open →</span></a>
+<div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 07</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
 </div>
 <footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
 </div>
@@ -268,6 +269,8 @@ const ICONS = {
   four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="11" y2="0" ${line} stroke-width="3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
   // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
   cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
+  // Cantilever: wall, dashed unloaded beam, then a beam and arrow that the controller below redraws each frame.
+  cant: () => `<path d="M10 30H54" ${line} stroke-dasharray="2 3" opacity=".45"/><path d="M10 16V44M10 20L5 25M10 26L5 31M10 32L5 37M10 38L5 43" ${line}/><path class="cb" ${line}/><path class="ca" style="stroke-width:1.5" ${line}/>`,
   motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
 };
 {
@@ -297,6 +300,41 @@ const ICONS = {
   document.head.appendChild(st2);
 }
 document.querySelectorAll("[data-icon]").forEach(s => s.innerHTML = ICONS[s.dataset.icon]());
+{
+  // Cantilever icon: a small, slow deflection (exaggerated only enough to read at icon size) as the arrow loads the tip.
+  // The beam is the outline of a thin strip along y = d(3u^2 - u^3)/2 (end-load shape), redrawn each frame.
+  // Runs only while the tile is hovered or focused, and stays still under prefers-reduced-motion.
+  const svg = document.querySelector("[data-icon=cant]"), tile = svg.closest(".tile");
+  const beam = svg.querySelector(".cb"), arrow = svg.querySelector(".ca");
+  const x0 = 10, L = 44, y0 = 30, h = 5, D = 5, N = 16, T = 5, rm = matchMedia("(prefers-reduced-motion: reduce)");
+  const f = v => v.toFixed(2), pt = p => f(p[0]) + " " + f(p[1]);
+  const draw = s => {
+    const d = D * s, top = [], bot = [];
+    for (let i = 0; i <= N; i++) {
+      const u = i / N, y = d * (3 * u * u - u ** 3) / 2, th = Math.atan(d * (6 * u - 3 * u * u) / 2 / L), x = x0 + L * u;
+      const nx = Math.sin(th) * h / 2, ny = -Math.cos(th) * h / 2; // upward normal
+      top.push([x + nx, y0 + y + ny]); bot.push([x - nx, y0 + y - ny]);
+    }
+    beam.setAttribute("d", "M" + top.map(pt).join("L") + "L" + bot.reverse().map(pt).join("L") + "Z");
+    const [ax, ay] = top[N], ty = ay - 3 * (1 - s); // arrow tip just meets the beam at full load
+    arrow.setAttribute("d", `M${f(ax)} ${f(ty - 14)}V${f(ty)}M${f(ax - 2.5)} ${f(ty - 4)}L${f(ax)} ${f(ty)}L${f(ax + 2.5)} ${f(ty - 4)}`);
+  };
+  // Load profile over one cycle: ease on, brief hold, ease off, short rest.
+  const ease = x => (1 - Math.cos(Math.PI * x)) / 2;
+  const load = p => p < .4 ? ease(p / .4) : p < .55 ? 1 : p < .95 ? ease(1 - (p - .55) / .4) : 0;
+  let t = 0, last = null, raf = 0;
+  const step = now => {
+    if (last !== null) t = (t + (now - last) / 1000) % T;
+    last = now;
+    draw(load(t / T));
+    raf = requestAnimationFrame(step);
+  };
+  const play = () => { if (!rm.matches && !raf) raf = requestAnimationFrame(step); };
+  const stop = () => { cancelAnimationFrame(raf); raf = 0; last = null; };
+  draw(rm.matches ? 0.7 : 0);
+  tile.addEventListener("mouseenter", play); tile.addEventListener("mouseleave", stop);
+  tile.addEventListener("focusin", play); tile.addEventListener("focusout", stop);
+}
 </script>
 </body>
 </html>
