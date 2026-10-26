@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cantilever Beam Calculator</title>
+<meta name="description" content="Interactive cantilever beam calculator: point, uniform and ramp loads, bending and shear stress colour maps, shear, moment and deflection graphs, and the calculus derivation from w(x) to bending stress.">
+<meta name="theme-color" content="#12304a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+svg{display:block;width:100%;height:auto}
+#beam{aspect-ratio:1000/260}
+#diag{aspect-ratio:1000/372}
+svg text{font:600 11px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--label);text-anchor:middle}
+.legend{display:flex;align-items:center;gap:8px;margin:8px 0 16px;font-size:13px;color:var(--mute)}
+.legend i{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,rgb(58,134,255),rgb(46,196,182),rgb(255,210,63),rgb(255,59,48))}
+.strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 20px;margin-bottom:16px}
+.strip small{display:block;color:var(--mute);font-size:14px}
+.strip b{font-size:clamp(22px,5vw,34px);line-height:1.1;font-weight:700}
+.sub{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);border-bottom:1px solid var(--line);padding-bottom:4px;margin:18px 0 10px}
+.pwrap>div:first-child>.sub:first-child{margin-top:0}
+.pgrid.fields{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.pgrid.loadrow{grid-template-columns:minmax(150px,200px) minmax(0,1fr) minmax(0,1fr);align-items:end;padding:6px 0 10px;border-bottom:1px dashed var(--line)}
+.pgrid .chk{display:flex;gap:10px;align-items:center;color:var(--ink);font-weight:600;font-size:15px;padding-bottom:7px}
+.pgrid .chk input{width:auto;margin:0;accent-color:var(--belt)}
+.pgrid .chk.wide{grid-column:1/-1;padding-bottom:0}
+.pgrid .off{opacity:.4}
+@media (max-width:560px){.pgrid.loadrow{grid-template-columns:repeat(2,minmax(0,1fr))}.pgrid .chk{grid-column:1/-1;padding-bottom:0}}
+.how h3{font-size:14px;margin:14px 0 4px;color:var(--mute)}
+.how p{font-size:14.5px;line-height:1.5;margin:6px 0}
+.how code{font:inherit;font-weight:600;color:var(--belt)}
+.how .eq{padding-left:14px;border-left:3px solid var(--line)}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1><a class="back" href="index.html" aria-label="All mechanisms">←</a> Cantilever Beam</h1>
+<div class="grp"><div id="themeSlot"></div></div>
+</header>
+
+<div class="card strip">
+<div><small>Max bending stress (at the wall)</small><b id="sig">–</b></div>
+<div><small>Safety factor (yield)</small><b id="sfv">–</b></div>
+<div><small>Tip deflection</small><b id="tipv">–</b></div>
+</div>
+
+<div class="sheet"><svg id="beam" viewBox="0 0 1000 260" role="img" aria-label="Cantilever beam under load, coloured by bending stress"></svg></div>
+<div class="legend"><small id="legT">Bending stress ÷ peak</small><span>0</span><i></i><span id="legMax">peak</span></div>
+<p class="note">The beam is fixed at the left wall and free at the right. Loads act downward, so the top fibre is in tension and the bottom in compression. Colour shows bending stress through the depth: blue on the neutral axis and red at the highest stress on the beam, or at yield if you switch the colour scale under Inputs. The deflection is drawn at true scale and the callout gives the actual tip drop. The Deflection drawing setting in the inputs can exaggerate it.</p>
+
+<div class="card" style="margin-top:16px">
+<h2>Inputs</h2>
+<div class="pwrap">
+<div>
+<div class="sub">Beam and material</div>
+<div class="pgrid fields">
+<label>Length L (mm)<input type="number" id="bl" value="300" step="any" min="10" max="5000"></label>
+<label>Section<select id="sect"><option value="rect">Rectangle</option><option value="round">Solid round</option><option value="tube">Round tube</option></select></label>
+<label id="lblS1">Width b (mm)<input type="number" id="s1" value="20" step="any" min="0.5" max="500"></label>
+<label id="lblS2">Height h (mm)<input type="number" id="s2" value="10" step="any" min="0.5" max="500"></label>
+<label>Material<select id="mat"></select></label>
+<label>Modulus E (GPa)<input type="number" id="em" value="68.9" step="any" min="0.1" max="500"></label>
+<label>Yield strength (MPa)<input type="number" id="sy" value="276" step="any" min="1" max="3000"></label>
+<label>Density (kg/m³)<input type="number" id="rho" value="2700" step="any" min="100" max="25000"></label>
+</div>
+<div class="sub">Loads (downward)</div>
+<div class="pgrid loadrow"><label class="chk"><input type="checkbox" id="onP" checked> Point load</label><label id="lblP">Force P (N)<input type="number" id="Pl" value="50" step="any" min="0" max="1000000"></label><label id="lblA">Position from wall (mm)<input type="number" id="ap" value="300" step="any" min="0" max="5000"></label></div>
+<div class="pgrid loadrow"><label class="chk"><input type="checkbox" id="onU"> Uniform load</label><label id="lblW0">Intensity w₀ (N/mm)<input type="number" id="w0" value="0.2" step="any" min="0" max="10000"></label></div>
+<div class="pgrid loadrow"><label class="chk"><input type="checkbox" id="onR"> Linear ramp load</label><label id="lblWa">At the wall (N/mm)<input type="number" id="wa" value="0" step="any" min="0" max="10000"></label><label id="lblWb">At the tip (N/mm)<input type="number" id="wb" value="0.4" step="any" min="0" max="10000"></label></div>
+<div class="pgrid loadrow"><label class="chk wide"><input type="checkbox" id="onS"> Include the beam's own weight</label></div>
+<div class="sub">Display</div>
+<div class="pgrid fields">
+<label>Deflection drawing<select id="ex"><option value="1">True scale</option><option value="auto">Exaggerated (about 20% of L)</option></select></label>
+<label>Stress colours<select id="cs"><option value="peak">Scaled to the peak stress</option><option value="yield">Scaled to yield strength</option></select></label>
+</div>
+</div>
+<div class="pout"><div id="gwarn"></div><table class="res"><tbody id="gres"></tbody></table></div>
+</div>
+</div>
+
+<div class="sheet" style="margin-top:16px"><svg id="diag" viewBox="0 0 1000 372" role="img" aria-label="Shear force, bending moment and deflection along the beam"></svg></div>
+
+<details class="how card" style="margin-top:16px"><summary>Derivation: from the load w(x) to bending stress and deflection</summary><div id="deriv"></div></details>
+</main>
+
+<script src="shared/ui.js"></script>
+<script>
+const RAMP = [[58, 134, 255], [46, 196, 182], [255, 210, 63], [255, 59, 48]];
+function ramp(t) {
+  t = Math.min(1, Math.max(0, t)) * 3;
+  const i = Math.min(2, Math.floor(t)), f = t - i, a = RAMP[i], b = RAMP[i + 1];
+  return "rgb(" + a.map((x, j) => Math.round(x + (b[j] - x) * f)).join(",") + ")";
+}
+// name, E (GPa), yield (MPa), density (kg/m³): typical room-temperature handbook values
+const MATS = {
+  al6061: ["Aluminum 6061-T6", 68.9, 276, 2700], al7075: ["Aluminum 7075-T6", 71.7, 503, 2810],
+  a36: ["Steel A36", 200, 250, 7850], ss304: ["Stainless steel 304 (annealed)", 193, 215, 8000], ss316: ["Stainless steel 316 (annealed)", 193, 205, 8000],
+  ti64: ["Titanium Ti-6Al-4V", 113.8, 880, 4430], ti2: ["Titanium CP Grade 2", 105, 275, 4510], brass: ["Brass C360", 97, 310, 8500],
+  pom: ["Acetal (POM)", 3.1, 66, 1410], abs: ["ABS", 2.3, 40, 1050], pla: ["PLA (3D printed)", 3.5, 55, 1240]
+};
+const NS = 400, G = 9.81, PI = Math.PI, n1 = v => v.toFixed(1);
+$("mat").innerHTML = Object.entries(MATS).map(([k, v]) => `<option value="${k}">${v[0]}</option>`).join("") + '<option value="custom">Custom</option>';
+
+// Cross-section properties. depth = distance between the extreme fibres, c = depth / 2.
+// g(eta) is the shear stress per unit shear force at height eta above the neutral axis: tau = V·Q(eta) / (I·width(eta)).
+function section() {
+  const t = $("sect").value, a = val("s1"), b = val("s2");
+  $("lblS1").firstChild.nodeValue = { rect: "Width b (mm) ", round: "Diameter d (mm) ", tube: "Outer diameter D (mm) " }[t];
+  $("lblS2").firstChild.nodeValue = t === "tube" ? "Wall thickness t (mm) " : "Height h (mm) ";
+  $("lblS2").hidden = t === "round";
+  if (t === "rect") { if (!(a > 0 && b > 0)) return null; const I = a * b ** 3 / 12, c = b / 2; return { t, A: a * b, I, c, depth: b, g: e => (c * c - e * e) / (2 * I), dims: `b = ${fmt(a, 1)}, h = ${fmt(b, 1)} mm`, Iform: "I = b·h³ / 12", Aform: "A = b·h" }; }
+  if (t === "round") { if (!(a > 0)) return null; const I = PI * a ** 4 / 64, c = a / 2; return { t, A: PI * a * a / 4, I, c, depth: a, g: e => (c * c - e * e) / (3 * I), dims: `d = ${fmt(a, 1)} mm`, Iform: "I = π·d⁴ / 64", Aform: "A = π·d² / 4" }; }
+  const di = a - 2 * b;
+  if (!(a > 0 && b > 0 && di > 0)) return null;
+  const I = PI * (a ** 4 - di ** 4) / 64, c = a / 2, ri = di / 2;
+  const g = e => { const e2 = e * e, o = Math.sqrt(Math.max(0, c * c - e2)), n = e2 < ri * ri ? Math.sqrt(ri * ri - e2) : 0, w = 2 * (o - n); return w > 1e-9 ? 2 / 3 * (o ** 3 - n ** 3) / (I * w) : 0; };
+  return { t, A: PI * (a * a - di * di) / 4, I, c, depth: a, g, dims: `D = ${fmt(a, 1)}, t = ${fmt(b, 1)} mm`, Iform: "I = π·(D⁴ − d⁴) / 64", Aform: "A = π·(D² − d²) / 4" };
+}
+
+// Numerical version of the derivation. x runs from the wall; V and M are the downward shear and hogging moment from the load to the right of x.
+function solve(L, EI, ld, wf) {
+  const N = NS, h = L / N, x = [], w = [], Vd = new Array(N + 1), Md = new Array(N + 1), V = [], M = [], th = [0], y = [0];
+  for (let i = 0; i <= N; i++) { x.push(h * i); w.push(wf(h * i)); }
+  Vd[N] = 0; Md[N] = 0;
+  for (let i = N - 1; i >= 0; i--) { Vd[i] = Vd[i + 1] + (w[i] + w[i + 1]) / 2 * h; Md[i] = Md[i + 1] + (Vd[i] + Vd[i + 1]) / 2 * h; }   // V = ∫w ds, M = ∫V ds from the free end
+  for (let i = 0; i <= N; i++) { V.push(Vd[i] + (x[i] < ld.a - 1e-9 ? ld.P : 0)); M.push(Md[i] + ld.P * Math.max(0, ld.a - x[i])); }
+  for (let i = 0; i < N; i++) { th.push(th[i] + (M[i] + M[i + 1]) / 2 * h / EI); y.push(y[i] + (th[i] + th[i + 1]) / 2 * h); }   // EI y'' = M
+  return { N, x, w, V, M, th, y };
+}
+
+function arrow(x, y0, y1, col, wd) {
+  return `<path d="M${n1(x)} ${n1(y0)}L${n1(x)} ${n1(y1)}" stroke="${col}" stroke-width="${wd}" fill="none"/><path d="M${n1(x - 4)} ${n1(y1 - 7)}L${n1(x)} ${n1(y1)}L${n1(x + 4)} ${n1(y1 - 7)}Z" fill="${col}"/>`;
+}
+const X0 = 90, LP = 800;                                              // beam drawing: wall position and length in viewBox units
+const thick = (sec, L) => Math.max(24, Math.min(70, sec.depth * LP / L));
+const wall = (YC, hh) => `<rect x="${X0 - 14}" y="${YC - hh}" width="14" height="${2 * hh}" fill="var(--fill)" stroke="var(--edge)" stroke-width="1.5"/>` + Array.from({ length: Math.floor(hh / 7) }, (_, j) => `<path d="M${X0 - 14} ${YC - hh + 14 * (j + 1)}l-9 -12" stroke="var(--edge)" stroke-width="1.2"/>`).join("");
+
+// Heat map of a stress field over the beam: colour(i0, i1, eta) gives 0..1 for a slice between samples i0 and i1 at height eta (mm).
+function heat(S, sec, L, YC, k, colour) {
+  const N = S.N, tp = thick(sec, L), pxmm = LP / L, KL = 14, SL = 5, xp = i => X0 + LP * S.x[i] / L, yo = i => S.y[i] * pxmm * k;
+  let h = "";
+  for (let j = 0; j < N / SL; j++) {
+    const i0 = j * SL, i1 = i0 + SL;
+    for (let l = 0; l < KL; l++) {
+      const p0 = -tp / 2 + tp * l / KL, p1 = -tp / 2 + tp * (l + 1) / KL, col = ramp(colour(i0, i1, Math.abs(p0 + p1) / tp * sec.c));
+      h += `<path d="M${n1(xp(i0))} ${n1(YC + yo(i0) + p0)}L${n1(xp(i1))} ${n1(YC + yo(i1) + p0)}L${n1(xp(i1))} ${n1(YC + yo(i1) + p1)}L${n1(xp(i0))} ${n1(YC + yo(i0) + p1)}Z" fill="${col}" stroke="${col}" stroke-width=".6"/>`;
+    }
+  }
+  const edge = o => Array.from({ length: N / SL + 1 }, (_, j) => `${n1(xp(j * SL))} ${n1(YC + yo(j * SL) + o)}`).join("L");
+  return h + `<path d="M${edge(-tp / 2)}L${edge(tp / 2).split("L").reverse().join("L")}Z" fill="none" stroke="var(--edge)" stroke-width="1.6" stroke-linejoin="round"/>`;
+}
+
+function drawBeam(S, sec, ld, L, sy) {
+  const YC = 120, pxmm = LP / L, tp = thick(sec, L), N = S.N, xp = i => X0 + LP * S.x[i] / L, tipPx = S.y[S.N] * pxmm;
+  const k = $("ex").value === "auto" && tipPx > 1e-9 ? Math.min(5000, Math.max(1, 80 / tipPx)) : 1, yo = i => S.y[i] * pxmm * k;
+  let h = `<path d="M${X0} ${YC - tp / 2}h${LP}v${tp}h${-LP}z" fill="none" stroke="var(--mute)" stroke-width="1" stroke-dasharray="5 4"/>`;
+  const peak = S.M[0] * sec.c / sec.I, ref = $("cs").value === "peak" && peak > 0 ? peak : sy;
+  $("legT").textContent = ref === sy ? "Bending stress ÷ yield" : "Bending stress ÷ peak"; $("legMax").textContent = ref === sy ? "1 (yield)" : `1 (peak ${fmt(peak, 1)} MPa, ${fmt(peak / sy * 100, 0)}% of yield)`;
+  h += heat(S, sec, L, YC, k, (i0, i1, eta) => Math.abs(S.M[i0] + S.M[i1]) / 2 * eta / sec.I / ref);
+  h += `<path d="M${Array.from({ length: N / 5 + 1 }, (_, j) => `${n1(xp(j * 5))} ${n1(YC + yo(j * 5))}`).join("L")}" fill="none" stroke="var(--label)" stroke-width=".8" stroke-dasharray="6 3 1 3" opacity=".7"/>`;
+  h += wall(YC, 60);
+  const top = i => YC + yo(i) - tp / 2, ws = S.w.map(Math.abs), wmax = Math.max(...ws);
+  if (wmax > 1e-12) {
+    const env = [];
+    for (let j = 0; j <= 24; j++) {
+      const i = Math.round(j / 24 * N);
+      if (ws[i] < 1e-12) continue;
+      const len = 14 + 42 * ws[i] / wmax, y0 = top(i) - len - 3;
+      h += arrow(xp(i), y0, top(i) - 1, "var(--ink)", 1.4); env.push(`${n1(xp(i))} ${n1(y0)}`);
+    }
+    if (env.length > 1) h += `<path d="M${env.join("L")}" fill="none" stroke="var(--ink)" stroke-width="1.4"/>`;
+    h += `<text x="${X0}" y="14" style="text-anchor:start">w(x): ${fmt(S.w[0], 2)} → ${fmt(S.w[N], 2)} N/mm</text>`;
+  }
+  if (ld.P > 0) { const i = Math.round(ld.a / L * N); h += arrow(xp(i), top(i) - 66, top(i) - 1, "var(--belt)", 3) + `<text x="${n1(Math.min(xp(i), 960))}" y="${n1(top(i) - 72)}">P = ${fmt(ld.P, 1)} N</text>`; }
+  // Tip drop callout: dimension lines from the undeformed to the deflected centreline at the free end.
+  const xe = X0 + LP, xc = xe + 16, y1 = YC + yo(N), up = y1 - YC > 30;
+  h += `<path d="M${xe} ${YC}H${xc + 6}M${xe} ${n1(y1)}H${xc + 6}M${xc} ${YC}V${n1(y1)}" stroke="var(--belt)" stroke-width="1.2" fill="none"/>`;
+  if (up) h += `<path d="M${xc - 3} ${YC + 8}L${xc} ${YC}L${xc + 3} ${YC + 8}M${xc - 3} ${n1(y1 - 8)}L${xc} ${n1(y1)}L${xc + 3} ${n1(y1 - 8)}" stroke="var(--belt)" stroke-width="1.2" fill="none"/>`;
+  h += `<text x="${xc + 12}" y="${n1((YC + y1) / 2 + 4)}" style="text-anchor:start;fill:var(--belt)">δ = ${fmt(S.y[N], 2)} mm</text>`;
+  if (k > 1) h += `<text x="${xc + 12}" y="${n1((YC + y1) / 2 + 18)}" style="text-anchor:start;fill:var(--mute)">drawn ×${fmt(k, k < 10 ? 1 : 0)}</text>`;
+  h += `<text x="12" y="${YC + 90}" style="text-anchor:start">Wall reaction</text><text x="12" y="${YC + 104}" style="text-anchor:start">R = ${fmt(S.V[0], 1)} N</text><text x="12" y="${YC + 118}" style="text-anchor:start">M₀ = ${fmt(S.M[0] / 1000, 2)} N·m</text>`;
+  $("beam").innerHTML = h;
+}
+
+// Shear, moment and deflection against position, stacked. The 16-unit margin under the axis labels stops them clipping.
+function drawDiag(S) {
+  const GX = 90, GL = 840, N = S.N;
+  const panel = (k, title, vals, unit, down, d) => {
+    const mx = Math.max(...vals.map(Math.abs), 1e-12), base = down ? 42 : 100, sg = down ? 1 : -1, pts = [];
+    for (let i = 0; i <= N; i += 4) pts.push(`${n1(GX + GL * i / N)} ${n1(base + sg * vals[i] / mx * 58)}`);
+    return `<g transform="translate(0 ${k * 114})"><path d="M${GX} ${base}L${pts.join("L")}L${GX + GL} ${base}Z" fill="var(--belt)" fill-opacity=".22" stroke="var(--belt)" stroke-width="1.6" stroke-linejoin="round"/>` +
+      `<path d="M${GX} ${base}h${GL}" stroke="var(--mute)" stroke-width=".8"/><path d="M${GX} 36V106" stroke="var(--edge)" stroke-width="1"/>` +
+      `<text x="10" y="16" style="text-anchor:start">${title}</text><text x="10" y="31" style="text-anchor:start;fill:var(--mute)">max ${fmt(mx, d)} ${unit}</text></g>`;
+  };
+  $("diag").innerHTML = panel(0, "Shear V(x)", S.V, "N", false, 1) + panel(1, "Moment M(x)", S.M.map(v => v / 1000), "N·m", false, 2) + panel(2, "Deflection y(x)", S.y, "mm", true, 3) +
+    `<text x="${GX}" y="356">wall (x = 0)</text><text x="${GX + GL}" y="356">tip (x = L)</text>`;
+}
+
+function update() {
+  const L = val("bl"), sec = section(), E = val("em") * 1000, sy = val("sy"), rho = val("rho");   // E in N/mm²
+  [["onP", ["lblP", "lblA"]], ["onU", ["lblW0"]], ["onR", ["lblWa", "lblWb"]]].forEach(([c, ids]) => ids.forEach(i => $(i).classList.toggle("off", !$(c).checked)));
+  const on = id => $(id).checked, ok = [L, E, sy, rho, val("Pl"), val("ap"), val("w0"), val("wa"), val("wb")].every(v => isFinite(v) && v >= 0) && L > 0 && E > 0 && sy > 0 && rho > 0;
+  if (!sec || !ok) {
+    ["sig", "sfv", "tipv"].forEach(i => $(i).textContent = "–");
+    ["beam", "diag", "gres", "deriv"].forEach(i => $(i).innerHTML = "");
+    $("gwarn").innerHTML = '<div class="pw">Enter positive dimensions and material values, and zero or more for each load. For a tube the wall must be thinner than half the diameter.</div>'; return;
+  }
+  const sw = on("onS") ? rho * 1e-9 * sec.A * G : 0;   // beam weight per mm, N/mm
+  const ld = { P: on("onP") ? val("Pl") : 0, a: Math.min(L, val("ap")), w0: on("onU") ? val("w0") : 0, wa: on("onR") ? val("wa") : 0, wb: on("onR") ? val("wb") : 0, sw };
+  const wf = x => ld.w0 + ld.wa + (ld.wb - ld.wa) * x / L + ld.sw, EI = E * sec.I, S = solve(L, EI, ld, wf), N = S.N, g0 = sec.g(0);
+  const R = S.V[0], M0 = S.M[0], sig = M0 * sec.c / sec.I, tau = R * g0, sf = sig > 0 ? sy / sig : Infinity, tip = S.y[N], slope = S.th[N], t = sig / sy;
+  const mass = rho * 1e-9 * sec.A * L, f1 = 1.8751 ** 2 / (2 * PI * (L / 1000) ** 2) * Math.sqrt(E * 1e6 * sec.I * 1e-12 / (rho * sec.A * 1e-6));
+  $("sig").textContent = fmt(sig, 1) + " MPa"; $("sig").style.color = ramp(t);
+  $("sfv").textContent = isFinite(sf) ? fmt(sf, 2) : "∞"; $("tipv").textContent = fmt(tip, 3) + " mm";
+  const W = [];
+  if (R <= 0) W.push("No load is switched on. Tick a load above.");
+  if (sf < 1) W.push("Bending stress exceeds yield: the beam would bend permanently."); else if (sf < 2) W.push("Low safety factor. Aim for 2 or more for a static load.");
+  if (tip > .1 * L) W.push("Tip deflection is over 10% of the length. These small-deflection equations lose accuracy here, so treat the numbers as approximate.");
+  $("gwarn").innerHTML = W.length ? W.map(x => `<div class="pw">${x}</div>`).join("") : '<div class="pok">No warnings.</div>';
+  $("gres").innerHTML = [
+    ["Reaction force at wall R", fmt(R, 2) + " N"], ["Wall moment M₀", fmt(M0 / 1000, 3) + " N·m"],
+    ["Section area / I", fmt(sec.A, 1) + " mm² / " + fmt(sec.I, 0) + " mm⁴"], ["Section modulus S = I / c", fmt(sec.I / sec.c, 1) + " mm³"],
+    ["Max bending stress", fmt(sig, 1) + " MPa"], ["Peak shear stress", fmt(tau, 2) + " MPa"],
+    ["Tip deflection", fmt(tip, 3) + " mm" + (tip > 0 ? " (L / " + fmt(L / tip, 0) + ")" : "")], ["Tip slope", fmt(slope * 180 / PI, 2) + "°"],
+    ["Beam mass", fmt(mass * 1000, 1) + " g"], ["First natural frequency", fmt(f1, 1) + " Hz (beam alone)"]
+  ].map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+  drawBeam(S, sec, ld, L, sy); drawDiag(S);
+  derivation(S, sec, ld, L, E, EI, sy, sig, tau, sf, tip, slope);
+}
+
+// Written derivation, filled in with the current inputs. Closed forms are shown beside the numerical result as a check.
+function derivation(S, sec, ld, L, E, EI, sy, sig, tau, sf, tip, slope) {
+  const wU = ld.w0 + ld.wa + ld.sw, q = ld.wb - ld.wa, e = (x, d = 2) => fmt(x, d);
+  const parts = []; if (ld.w0) parts.push(e(ld.w0)); if (ld.wa || ld.wb) parts.push(`(${e(ld.wa)} + ${e(q)}·x/${e(L, 0)})`); if (ld.sw) parts.push(e(ld.sw, 4) + " (own weight)");
+  const tipCF = ld.P * ld.a ** 2 * (3 * L - ld.a) / (6 * EI) + wU * L ** 4 / (8 * EI) + q * 11 * L ** 4 / (120 * EI);
+  $("deriv").innerHTML = `
+<h3>1. Start with the load</h3>
+<p>Measure x from the fixed wall. The load intensity w(x) is force per length (N/mm, downward positive), and a point load P acts at x = a. A uniform load is constant, a ramp is linear, w(x) = w<sub>a</sub> + (w<sub>b</sub> − w<sub>a</sub>)·x/L, and your own-weight load is ρ·g·A. Your inputs give:</p>
+<p class="eq"><code>w(x) = ${parts.length ? parts.join(" + ") : "0"} N/mm</code>${ld.P ? ` and P = <code>${e(ld.P, 1)} N</code> at x = <code>${e(ld.a, 0)} mm</code>` : ""}</p>
+<h3>2. Shear: integrate the load</h3>
+<p>Cut out a slice of length dx. Vertical equilibrium gives dV/dx = −w(x). The free end carries no shear, V(L) = 0, so integrating from the free end back to x:</p>
+<p class="eq">V(x) = ∫<sub>x</sub><sup>L</sup> w(s) ds + ΣP (for point loads beyond x)</p>
+<p>At the wall this is the support reaction: R = V(0) = ∫<sub>0</sub><sup>L</sup> w dx + P = <code>${e(S.V[0])} N</code></p>
+<h3>3. Moment: integrate the shear</h3>
+<p>Moment equilibrium of the slice gives dM/dx = −V(x), and the free end has M(L) = 0, so</p>
+<p class="eq">M(x) = ∫<sub>x</sub><sup>L</sup> V(s) ds = ∫<sub>x</sub><sup>L</sup> (s − x)·w(s) ds + ΣP·(a − x), which also means d²M/dx² = w(x)</p>
+<p>Every load is downward, so M grows toward the wall and peaks there: M₀ = M(0) = <code>${e(S.M[0] / 1000, 3)} N·m</code></p>
+<h3>4. The three load shapes in closed form</h3>
+<ul>
+<li><b>Point load P at x = a:</b> V = P and M = P(a − x) for x &lt; a, zero beyond. M₀ = P·a. Deflection y = P·x²(3a − x) / 6EI for x ≤ a. Tip y(L) = P·a²(3L − a) / 6EI, which is P·L³ / 3EI when a = L.</li>
+<li><b>Uniform load w₀:</b> V = w₀(L − x) and M = w₀(L − x)² / 2. M₀ = w₀L² / 2. Deflection y = w₀·x²(6L² − 4Lx + x²) / 24EI, and the tip is w₀L⁴ / 8EI.</li>
+<li><b>Ramp from w<sub>a</sub> at the wall to w<sub>b</sub> at the tip:</b> split it into a uniform part w<sub>a</sub> plus a triangle of height q = w<sub>b</sub> − w<sub>a</sub> growing to the tip. For the triangle, V = q(L² − x²) / 2L, M = q(L − x)²(2L + x) / 6L, M₀ = qL² / 3, and y = q·x²(20L³ − 10L²x + x³) / 120L·EI, so the tip is 11qL⁴ / 120EI.</li>
+</ul>
+<p>The material behaves linearly, so these cases add by superposition. Your total tip deflection from the closed forms is <code>${e(tipCF, 3)} mm</code>, and the numerical integration on this page gives <code>${e(tip, 3)} mm</code>.</p>
+<h3>5. Bending stress</h3>
+<p>Plane sections stay plane, so strain, and therefore stress, grows linearly from the neutral axis: σ(y) = M·y / I. The extreme fibre at distance c gives the maximum, σ<sub>max</sub> = M·c / I = M / S. For your section (${sec.dims}): ${sec.Aform} = <code>${e(sec.A, 1)} mm²</code>, ${sec.Iform} = <code>${e(sec.I, 0)} mm⁴</code>, c = <code>${e(sec.c, 2)} mm</code>.</p>
+<p class="eq">σ<sub>max</sub> = M₀·c / I = <code>${e(sig, 1)} MPa</code>, so the safety factor against yield is S<sub>y</sub> / σ<sub>max</sub> = ${e(sy, 0)} / ${e(sig, 1)} = <code>${isFinite(sf) ? e(sf, 2) : "∞"}</code></p>
+<p>The bending colours use σ(x, y) divided by the peak stress (or by S<sub>y</sub>, if you pick that colour scale) at every point: zero on the neutral axis, rising linearly to the outer fibres, and following the moment diagram along the length.</p>
+<h3>6. Deflection: integrate twice more</h3>
+<p>Curvature is the second derivative of the deflection, and the moment-curvature relation is EI·d²y/dx² = M(x) (y downward). The wall is rigid, so the slope and deflection are both zero at x = 0:</p>
+<p class="eq">θ(x) = (1/EI) ∫<sub>0</sub><sup>x</sup> M(s) ds, y(x) = ∫<sub>0</sub><sup>x</sup> θ(s) ds</p>
+<p>With E = ${e(E / 1000, 1)} GPa the stiffness is EI = <code>${e(EI / 1e9, 4)} kN·m²</code>, giving a tip slope of <code>${e(slope * 180 / PI, 2)}°</code> and a tip deflection of <code>${e(tip, 3)} mm</code>.</p>
+<h3>7. Shear stress</h3>
+<p>The shear force is largest at the wall, V = R. At height η above the neutral axis the shear stress is τ(η) = V·Q(η) / (I·b(η)), where Q is the first moment of the area beyond η and b(η) is the width of material there. For a rectangle this is a parabola, τ = V(c² − η²) / 2I, which peaks at 3V / 2A. The peak for your section is <code>${e(tau, 2)} MPa</code>, which is normally far below the bending stress on a long beam.</p>`;
+}
+
+const TIPS = {
+  bl: "Length from the wall to the free tip. Deflection grows with L³ for an end load and L⁴ for a distributed load.",
+  sect: "Cross-section shape. It sets the area A, the second moment of area I and the shear stress distribution.",
+  s1: "Width of a rectangle, diameter of a solid round, or outer diameter of a tube.",
+  s2: "Height of a rectangle (the bending direction) or wall thickness of a tube.",
+  mat: "Fills in typical modulus, yield strength and density. Edit any of them to switch to Custom.",
+  em: "Young's modulus E. Stiffness, not strength: it sets deflection but not the stress.",
+  sy: "Yield strength. The bending colour scale runs from zero to this value. Annealed stainless and printed plastics vary a lot, so use your datasheet.",
+  rho: "Density, used for the beam's own weight, its mass and its natural frequency.",
+  Pl: "Concentrated downward force.",
+  ap: "Distance from the wall to the point load. Set it equal to L for a tip load.",
+  w0: "Uniform load, force per mm of length. 1 N/mm is the same as 1 kN/m.",
+  wa: "Ramp load intensity at the wall.",
+  cs: "Peak scaling uses the full colour range on this beam, so you can see where the stress is high and low. Yield scaling shows how close the stress is to failure, so a lightly loaded beam stays blue.",
+  ex: "True scale shows the real shape. Real deflections are small, so exaggerating can make the bend easier to see; the callout always gives the actual tip drop.",
+  wb: "Ramp load intensity at the free tip. Wall 0 and tip above 0 gives a triangle growing toward the tip."
+};
+function setMat(k) { const m = MATS[k]; if (m) { $("em").value = m[1]; $("sy").value = m[2]; $("rho").value = m[3]; } }
+$("mat").value = "al6061";
+document.querySelectorAll("main input, main select").forEach(el => el.addEventListener("input", () => { if (["em", "sy", "rho"].includes(el.id)) $("mat").value = "custom"; update(); }));
+$("mat").addEventListener("change", () => { setMat($("mat").value); update(); });
+clampInputs("main input[type=number]", update);
+initTips(TIPS);
+update();
+</script>
+</body>
+</html>
