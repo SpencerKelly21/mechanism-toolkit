@@ -108,7 +108,7 @@ svg text{font:600 9px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--mu
 <div class="pout"><div id="pwarn"></div><table class="res"><tbody id="pres"></tbody></table></div>
 </div>
 <p class="note">A sizing estimate, not a certification. Material and wear limits are placeholders: use your nut and screw supplier's datasheet. Ball screw life (L10) needs the dynamic load rating and is not included.</p>
-<details class="how" open><summary>Formulas used</summary><ul>
+<details class="how"><summary>Formulas used</summary><ul>
 <li>Pitch p = l / n. Mean diameter d<sub>m</sub> = d − p/2. Root diameter d<sub>r</sub> = d − p. Lead angle λ = atan(l / π·d<sub>m</sub>).</li>
 <li>Torque to raise (drive against the load), with thread half-angle α: T<sub>R</sub> = (F·d<sub>m</sub>/2)·(l + π·μ·d<sub>m</sub>·secα) / (π·d<sub>m</sub> − μ·l·secα) + F·μ<sub>c</sub>·d<sub>c</sub>/2. Ball screw: T<sub>R</sub> = F·l / (2π·η) + collar term.</li>
 <li>Torque to lower: T<sub>L</sub> = (F·d<sub>m</sub>/2)·(π·μ·d<sub>m</sub>·secα − l) / (π·d<sub>m</sub> + μ·l·secα) + collar term. Positive means self-locking. Negative means the load back-drives, and the magnitude is the holding torque. Ball screw: T<sub>L</sub> = F·l/(2π)·(1/η − 2) + collar term.</li>
