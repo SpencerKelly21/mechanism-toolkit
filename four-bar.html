@@ -11,12 +11,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/theme.css">
 <style>
-svg{display:block;width:100%;height:auto;aspect-ratio:4/3;touch-action:none}
+svg{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
+@media (max-width:700px){svg{aspect-ratio:4/3}} /* keep in step with NARROW in the script */
 svg text{font:600 12px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--label);text-anchor:middle;pointer-events:none}
 svg path,svg line,svg polygon{pointer-events:none}
 svg circle:not(.drag){pointer-events:none}
 .drag{cursor:grab}
 .dragging .drag{cursor:grabbing}
+/* Settings panel sits under the full-width drawing, laid out in three columns: readouts | inputs | warnings and results. */
+.panel{display:grid;grid-template-columns:minmax(190px,.75fr) minmax(0,1.7fr) minmax(0,1.25fr);gap:18px 28px;align-items:start;margin-top:16px}
+.panel .read{grid-template-columns:1fr;margin-bottom:0}
+@media (max-width:900px){.panel{grid-template-columns:1fr}.panel .read{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -26,13 +31,11 @@ svg circle:not(.drag){pointer-events:none}
 <div class="grp"><div id="themeSlot"></div></div>
 </header>
 
-<div class="layout">
-<div>
 <div class="sheet"><svg id="svg" role="img" aria-label="Four-bar linkage with traced coupler curve"></svg></div>
 <div class="ctl"><button class="btn" id="play" type="button"></button><input type="range" id="ang" min="0" max="360" step="0.5" value="60" aria-label="Crank angle"><span id="angv"></span></div>
 <p class="note">Drag the crank pin (orange ring) to turn the crank, the orange dot to move the coupler point, or the right pivot to change the ground length. The orange outline is the path traced by the coupler point; dashed outlines are the paths of the two moving joints.</p>
-</div>
-<div class="card">
+
+<div class="card panel">
 <div class="read">
 <div class="big"><small>Linkage type (Grashof)</small><b id="ltype" style="font-size:28px">–</b></div>
 <div><small>Transmission angle now</small><b id="mu">–</b></div>
@@ -49,12 +52,13 @@ svg circle:not(.drag){pointer-events:none}
 <label>Coupler point offset (q)<input type="number" id="q" value="35" step="any" min="-500" max="500"></label>
 <label>Paths shown<select id="paths"><option value="all">All joints</option><option value="c">Coupler point only</option><option value="none">None</option></select></label>
 </div>
+<div>
 <div id="gwarn"></div>
 <table class="res"><tbody id="gres"></tbody><tbody id="live"></tbody></table>
 </div>
 </div>
 
-<details class="how card" open style="margin-top:16px"><summary>Equations used</summary><ul>
+<details class="how card" style="margin-top:16px"><summary>Equations used</summary><ul>
 <li>Crank pin A = r2·(cosθ2, sinθ2) with the crank pivot at the origin and the follower pivot at (d, 0). Joint B is the intersection of a circle of radius r3 about A and a circle of radius r4 about the follower pivot: with D = |A − O4|, a = (r3² − r4² + D²) / 2D and h = √(r3² − a²), B = A + a·û ± h·n̂. The ± is the assembly mode. B exists only when |r3 − r4| ≤ D ≤ r3 + r4.</li>
 <li>Coupler point C = A + p·û + q·n̂, where û runs from A to B and n̂ is its left normal.</li>
 <li>Grashof test: with shortest link s, longest l and the other two p, q, the linkage has a fully rotating link if s + l &lt; p + q. The shortest link decides the type: crank gives a crank-rocker, ground a drag link, coupler a double-rocker, follower a rocker-crank. If s + l &gt; p + q it is a triple-rocker.</li>
@@ -68,7 +72,7 @@ svg circle:not(.drag){pointer-events:none}
 
 <script src="shared/ui.js"></script>
 <script>
-const svg = $("svg"), D2R = Math.PI / 180;
+const svg = $("svg"), D2R = Math.PI / 180, NARROW = matchMedia("(max-width:700px)");
 const PRE = { cr: [100, 30, 90, 70, 45, 35], dl: [40, 100, 90, 80, 45, 35], dr: [100, 70, 30, 80, 15, 25], rc: [100, 80, 90, 30, 45, 35], tr: [100, 50, 60, 70, 30, 30] };
 let P = null, S = null, view = null, rg = null, phi = 0, th2 = 60, last = 0, frozen = false, drag = null, playing = false;
 
@@ -150,12 +154,14 @@ function analyze(P, run, full) {
   return s;
 }
 
+// Fit the traced paths into the drawing. The drawing is 16:9 on wide screens and 4:3 on narrow ones (matches the CSS).
 function setView() {
   const pts = [[0, 0], [P.d, 0]];
   [S.A, S.B, S.C].forEach(a => a.forEach(p => p && pts.push(p)));
+  const asp = NARROW.matches ? 4 / 3 : 16 / 9;
   const xs = pts.map(p => p[0]), ys = pts.map(p => -p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-  const w = Math.max(x1 - x0, (y1 - y0) * 4 / 3) * 1.2, h = w * 3 / 4;
-  view = { x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - h / 2, w, h, u: w / 150 };
+  const w = Math.max(x1 - x0, (y1 - y0) * asp) * 1.2, h = w / asp;
+  view = { x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - h / 2, w, h, u: w / 180 };
 }
 
 const run = arr => { let d = "", on = false; arr.forEach(p => { if (p) { d += (on ? "L" : "M") + p[0].toFixed(2) + " " + (-p[1]).toFixed(2); on = true; } else on = false; }); return d; };
@@ -262,6 +268,7 @@ initTips({
   q: "Offset of the coupler point sideways from the coupler. Zero puts it on the line between the two joints.",
   paths: "Draw the coupler-point curve alone, or add the paths of the crank pin and follower joint."
 });
+NARROW.addEventListener("change", update); // the drawing switches between 16:9 and 4:3, so refit the view
 function tick(t) {
   if (playing && last && S && S.nOk) {
     const dt = Math.min(.05, (t - last) / 1000);   // ignore long gaps, e.g. after the tab was hidden
