@@ -91,6 +91,7 @@ table{width:100%;border-collapse:collapse}
 .hero h1{font-family:"Chakra Petch","Barlow Semi Condensed",system-ui,sans-serif;font-size:clamp(30px,4.6vw,46px);line-height:1.05;text-transform:uppercase;letter-spacing:.06em;margin:0 0 16px}
 .hero h1::after{content:"";display:block;width:84px;height:6px;background:var(--belt);margin-top:14px}
 .lede{font-size:17px;max-width:44ch;margin:0 0 14px}
+@media (min-width:761px){.lede{position:relative;top:28px}}
 #hero{width:100%;max-width:400px;height:auto;justify-self:end;margin:36px 40px 0 0}
 .sec{border-bottom:2px solid var(--belt);padding-bottom:6px;margin:0 0 16px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
@@ -135,7 +136,7 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <section class="hero">
 <div>
 <h1>Mechanism<br>Toolkit</h1>
-<p class="lede">Belts, gears and linkages you can drag, spin and size. Every page starts with pure geometry, with a physics toggle if you want forces, torques, and safety factors.</p>
+<p class="lede">Belts, gears and linkages you can drag, spin, and size. Every page starts with pure geometry, with a physics toggle if you want forces, torques, and safety factors.</p>
 </div>
 <svg id="hero" viewBox="-28 -38 124 76" role="img" aria-label="Two spur gears meshing and turning"></svg>
 </section>
