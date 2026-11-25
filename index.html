@@ -1,348 +1,700 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mechanism Toolkit</title>
-<meta name="description" content="Interactive mechanism calculators: belt drives, rack and pinion, and more. Geometry first, with an optional physics mode.">
-<meta name="theme-color" content="#12304a">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
-<style>
-/* Shared look for every mechanism page: four themes plus common components. */
-:root{--paper:#eef3f7;--sheet:#eef3f7;--grid:#d2dde6;--panel:#fbfdff;--ink:#12304a;--mute:#5b7388;--line:#c5d2dd;--belt:#e8541a;--fill:rgba(18,48,74,.09);--ifill:rgba(232,84,26,.14);--edge:#12304a;--label:#12304a;--bad:#c0392b;--cant:#7a9a1e;
-box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-:root[data-theme="blueprint"]{--paper:#0f2b4a;--sheet:#0f2b4a;--grid:#1d4266;--panel:#123658;--ink:#e6f0fa;--mute:#93b0cb;--line:#2a5379;--belt:#ffa63d;--fill:rgba(230,240,250,.08);--ifill:rgba(255,166,61,.16);--edge:#e6f0fa;--label:#e6f0fa;--bad:#ff8a7a;--cant:#b8e04a}
-:root[data-theme="chalkboard"]{--paper:#10261f;--sheet:#173529;--grid:#25493a;--panel:#14302a;--ink:#eaf3ec;--mute:#9fbfaa;--line:#2c5041;--belt:#f4f1e6;--fill:rgba(255,255,255,.07);--ifill:rgba(250,204,21,.2);--edge:#eaf3ec;--label:#eaf3ec;--bad:#ffab9c;--cant:#f0a30a}
-:root[data-theme="graphite"]{--paper:#1b1d21;--sheet:#23262b;--grid:#32363d;--panel:#25282d;--ink:#e9ecef;--mute:#9aa1a9;--line:#383c43;--belt:#3ddc97;--fill:rgba(255,255,255,.06);--ifill:rgba(61,220,151,.16);--edge:#e9ecef;--label:#e9ecef;--bad:#ff8a7a;--cant:#f5a524}
-*{box-sizing:border-box}
-html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.4 "Barlow Semi Condensed",system-ui,-apple-system,"Segoe UI",sans-serif;font-variant-numeric:tabular-nums}
-main{max-width:1060px;margin:0 auto;padding:16px}
-header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;margin-bottom:14px}
-h1{font-size:22px;font-weight:700;margin:0;letter-spacing:.01em}
-.back{color:var(--mute);text-decoration:none;margin-right:4px}
-.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:6px;overflow:hidden}
-.seg label{margin:0;cursor:pointer}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg span{display:block;padding:6px 14px;font-weight:500;border-left:1.5px solid var(--ink)}
-.seg label:first-child span{border-left:0}
-.seg input:checked+span{background:var(--ink);color:var(--paper)}
-.seg input:focus-visible+span{outline:2px solid var(--belt);outline-offset:-4px}
-.pair{display:flex;gap:10px;align-items:center}
-.grp{display:flex;gap:10px 18px;align-items:center;flex-wrap:wrap}
-.grp b{font-weight:500;color:var(--mute);font-size:14px}
-.layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
-@media (max-width:820px){.layout{grid-template-columns:1fr}}
-.sheet{border:1.5px solid var(--ink);border-radius:4px;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
-.card h2{font-size:16px;margin:0 0 10px}
-.read{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin-bottom:12px}
-.read .big{grid-column:1/-1;border-bottom:1.5px solid var(--ink);padding-bottom:8px;margin-bottom:4px}
-.read small{display:block;color:var(--mute);font-size:14px}
-.read .big b{font-size:44px;line-height:1.05;font-weight:700;color:var(--belt)}
-.read b{font-size:24px;font-weight:600}
-.pgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
-.pgrid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
-@media (max-width:560px){.pgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.pgrid label{font-size:13px;color:var(--mute)}
-.pgrid input,.pgrid select{width:100%;margin-top:3px;padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:15px}
-.pgrid input:focus,.pgrid select:focus,.btn:focus-visible{outline:2px solid var(--belt)}
-.pwrap{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px;align-items:start}
-@media (max-width:860px){.pwrap{grid-template-columns:1fr}}
-table{width:100%;border-collapse:collapse}
-.res td{padding:6px 4px;border-top:1px solid var(--line)}
-.res td:first-child{color:var(--mute)}
-.res td:last-child{text-align:right;font-weight:600}
-.pw{color:var(--bad);font-weight:600;margin-top:10px;font-size:14px}
-.pok{color:var(--mute);margin-top:10px;font-size:14px}
-.pout .pw:first-child,.pout .pok:first-child{margin-top:0}
-.note{color:var(--mute);font-size:13px;margin:8px 0 0}
-.how{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
-.how summary{cursor:pointer;font-weight:600}
-.how li{margin:6px 0;font-size:14.5px;line-height:1.5}
-.btn{font:inherit;font-weight:600;padding:6px 14px;border:1.5px solid var(--ink);border-radius:6px;background:none;color:var(--ink);cursor:pointer}
-.ctl{display:flex;gap:12px;align-items:center;margin-top:10px}
-.ctl input[type=range]{flex:1;accent-color:var(--belt)}
-.ctl span{min-width:150px;text-align:right;color:var(--mute);font-size:14px}
-.tip{width:15px;height:15px;border-radius:50%;border:1px solid var(--mute);background:none;color:var(--mute);font:600 10px/1 "Barlow Semi Condensed",system-ui,sans-serif;padding:0;margin-left:5px;cursor:help;vertical-align:1px}
-.tip:hover,.tip:focus-visible{color:var(--belt);border-color:var(--belt);outline:0}
-.tipbox{position:fixed;z-index:10;max-width:250px;padding:8px 10px;border-radius:6px;background:var(--ink);color:var(--paper);font-size:13px;line-height:1.35;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:none}
-@media (max-width:520px){
-.pair{flex-wrap:wrap;gap:6px 10px}
-.seg:has(label:nth-child(4)){display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
-.seg:has(label:nth-child(4)) span{text-align:center}
-.seg:has(label:nth-child(4)) label:nth-child(odd) span{border-left:0}
-.seg:has(label:nth-child(4)) label:nth-child(n+3) span{border-top:1.5px solid var(--ink)}
-.ctl{flex-wrap:wrap}
-.ctl span{min-width:0;flex-basis:100%;text-align:left}
-}
-[hidden]{display:none!important}
-</style>
-<style>
-.plate{position:relative;background-color:var(--sheet);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:28px 28px;border:2px solid var(--ink);padding:30px 28px 24px}
-.plate::before{content:"";position:absolute;inset:7px;border:1px solid var(--ink);pointer-events:none}
-.kick,.sec{font-size:13px;letter-spacing:.18em;text-transform:uppercase;font-weight:600;color:var(--mute)}
-.plate::after{content:"";position:absolute;left:0;right:0;top:0;height:6px;background:linear-gradient(90deg,#3a86ff,#2ec4b6,#ffd23f,var(--belt))}
-.plate header{margin:0}
-.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:24px;align-items:center;margin:10px 0 30px}
-@media (max-width:760px){.hero{grid-template-columns:1fr}#hero{justify-self:center;margin:12px 0 0}}
-.hero h1{font-family:"Chakra Petch","Barlow Semi Condensed",system-ui,sans-serif;font-size:clamp(30px,4.6vw,46px);line-height:1.05;text-transform:uppercase;letter-spacing:.06em;margin:0 0 16px}
-.hero h1::after{content:"";display:block;width:84px;height:6px;background:var(--belt);margin-top:14px}
-.lede{font-size:17px;max-width:44ch;margin:0 0 14px}
-@media (min-width:761px){.lede{position:relative;top:28px}}
-#hero{width:100%;max-width:400px;height:auto;justify-self:end;margin:36px 40px 0 0}
-.sec{border-bottom:2px solid var(--belt);padding-bottom:6px;margin:0 0 16px}
-.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
-.tile{--c:var(--belt);display:flex;flex-direction:column;gap:6px;padding:14px;background:var(--panel);background:color-mix(in srgb,var(--c) 13%,var(--panel));border:1.5px solid var(--ink);border-top:6px solid var(--c);color:var(--ink);text-decoration:none;transition:transform .15s,box-shadow .15s}
-a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 5px 0 var(--c);outline:0}
-.fig{font-size:12px;letter-spacing:.14em;color:var(--mute);font-weight:600}
-.ico{width:100%;height:88px;color:var(--c)}
-.tile h2{font-size:20px;margin:0;text-transform:uppercase;letter-spacing:.03em}
-.tile p{margin:0;font-size:14px;color:var(--mute);flex:1}
-.go{align-self:flex-start;font-weight:700;color:var(--ink);font-size:14px;letter-spacing:.08em;text-transform:uppercase;border-bottom:3px solid var(--c)}
-.tile.soon{border-style:dashed;border-top-style:solid;background:color-mix(in srgb,var(--c) 6%,transparent)}
-.tile.soon .go{color:var(--mute)}
-.tb{display:flex;justify-content:flex-end;flex-wrap:wrap;margin-top:28px}
-.tb div{border:1.5px solid var(--ink);margin-left:-1.5px;padding:4px 12px;font-weight:700;background:var(--panel)}
-.tb .hl{background:var(--belt);color:var(--paper)}
-.tb .hl span{color:inherit;opacity:.85}
-.tb span{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
-.spin{animation:cw var(--t) linear infinite}
-.spinr{animation:ccw var(--t) linear infinite}
-.rk{animation:rk 3s linear infinite alternate}
-.rp{animation:rp 3s linear infinite alternate}
-.fol{animation:fol 6s linear infinite}
-.ls{animation:ls 3s linear infinite alternate}
-.fb2{animation:fb2 6s linear infinite}
-.fb3{animation:fb3 6s linear infinite}
-.pu{opacity:0}
-.fl{animation:fl 1.6s linear infinite}
-.tile .spin,.tile .rk,.tile .rp,.tile .fol,.tile .ls,.tile .fb2,.tile .fb3,.tile .fl{animation-play-state:paused}
-.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol,.tile:hover .ls,.tile:focus-visible .ls,.tile:hover .fb2,.tile:focus-visible .fb2,.tile:hover .fb3,.tile:focus-visible .fb3,.tile:hover .fl,.tile:focus-visible .fl{animation-play-state:running}
-.tile:hover .pu,.tile:focus-visible .pu{animation:pu 1.8s linear infinite}
-@keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
-@keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
-@keyframes ls{from{transform:translateX(-12px)}to{transform:translateX(12px)}}
-@keyframes rk{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
-@keyframes fl{to{stroke-dashoffset:-8}}
-@keyframes pu{0%{transform:translateX(0);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(var(--d));opacity:0}}
-@keyframes rp{from{transform:rotate(61.35deg)}to{transform:rotate(118.65deg)}}
-@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol,.ls,.fb2,.fb3,.fl,.pu{animation:none!important}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
-@media (max-width:760px){.hero{margin-top:24px}#hero{justify-self:center;margin:12px 0 0;max-width:340px}}
-@media (max-width:520px){main{padding:10px}.plate{padding:22px 16px 18px}}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mechanism Toolkit</title>
+  <meta name="description" content="Interactive mechanism calculators: belt drives, rack and pinion, and more. Geometry first, with an optional physics mode.">
+  <meta name="theme-color" content="#12304a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Shared look for every mechanism page: four themes plus common components. */
+    :root {
+      --paper: #eef3f7;
+      --sheet: #eef3f7;
+      --grid: #d2dde6;
+      --panel: #fbfdff;
+      --ink: #12304a;
+      --mute: #5b7388;
+      --line: #c5d2dd;
+      --belt: #e8541a;
+      --fill: rgba(18, 48, 74, .09);
+      --ifill: rgba(232, 84, 26, .14);
+      --edge: #12304a;
+      --label: #12304a;
+      --bad: #c0392b;
+      --cant: #7a9a1e;
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    :root[data-theme="blueprint"] {
+      --paper: #0f2b4a;
+      --sheet: #0f2b4a;
+      --grid: #1d4266;
+      --panel: #123658;
+      --ink: #e6f0fa;
+      --mute: #93b0cb;
+      --line: #2a5379;
+      --belt: #ffa63d;
+      --fill: rgba(230, 240, 250, .08);
+      --ifill: rgba(255, 166, 61, .16);
+      --edge: #e6f0fa;
+      --label: #e6f0fa;
+      --bad: #ff8a7a;
+      --cant: #b8e04a;
+    }
+    :root[data-theme="chalkboard"] {
+      --paper: #10261f;
+      --sheet: #173529;
+      --grid: #25493a;
+      --panel: #14302a;
+      --ink: #eaf3ec;
+      --mute: #9fbfaa;
+      --line: #2c5041;
+      --belt: #f4f1e6;
+      --fill: rgba(255, 255, 255, .07);
+      --ifill: rgba(250, 204, 21, .2);
+      --edge: #eaf3ec;
+      --label: #eaf3ec;
+      --bad: #ffab9c;
+      --cant: #f0a30a;
+    }
+    :root[data-theme="graphite"] {
+      --paper: #1b1d21;
+      --sheet: #23262b;
+      --grid: #32363d;
+      --panel: #25282d;
+      --ink: #e9ecef;
+      --mute: #9aa1a9;
+      --line: #383c43;
+      --belt: #3ddc97;
+      --fill: rgba(255, 255, 255, .06);
+      --ifill: rgba(61, 220, 151, .16);
+      --edge: #e9ecef;
+      --label: #e9ecef;
+      --bad: #ff8a7a;
+      --cant: #f5a524;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px/1.4 "Barlow Semi Condensed", system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-variant-numeric: tabular-nums;
+    }
+    main { max-width: 1060px; margin: 0 auto; padding: 16px; }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 24px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    h1 { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: .01em; }
+    .back { color: var(--mute); text-decoration: none; margin-right: 4px; }
+    .seg { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; }
+    .seg label { margin: 0; cursor: pointer; }
+    .seg input { position: absolute; opacity: 0; pointer-events: none; }
+    .seg span { display: block; padding: 6px 14px; font-weight: 500; border-left: 1.5px solid var(--ink); }
+    .seg label:first-child span { border-left: 0; }
+    .seg input:checked + span { background: var(--ink); color: var(--paper); }
+    .seg input:focus-visible + span { outline: 2px solid var(--belt); outline-offset: -4px; }
+    .pair { display: flex; gap: 10px; align-items: center; }
+    .grp { display: flex; gap: 10px 18px; align-items: center; flex-wrap: wrap; }
+    .grp b { font-weight: 500; color: var(--mute); font-size: 14px; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+    @media (max-width: 820px) { .layout { grid-template-columns: 1fr; } }
+    .sheet {
+      border: 1.5px solid var(--ink);
+      border-radius: 4px;
+      background-color: var(--sheet);
+      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+    .card h2 { font-size: 16px; margin: 0 0 10px; }
+    .read { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; margin-bottom: 12px; }
+    .read .big { grid-column: 1 / -1; border-bottom: 1.5px solid var(--ink); padding-bottom: 8px; margin-bottom: 4px; }
+    .read small { display: block; color: var(--mute); font-size: 14px; }
+    .read .big b { font-size: 44px; line-height: 1.05; font-weight: 700; color: var(--belt); }
+    .read b { font-size: 24px; font-weight: 600; }
+    .pgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; }
+    .pgrid.g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 560px) { .pgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .pgrid label { font-size: 13px; color: var(--mute); }
+    .pgrid input, .pgrid select {
+      width: 100%;
+      margin-top: 3px;
+      padding: 5px 6px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-size: 15px;
+    }
+    .pgrid input:focus, .pgrid select:focus, .btn:focus-visible { outline: 2px solid var(--belt); }
+    .pwrap { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+    @media (max-width: 860px) { .pwrap { grid-template-columns: 1fr; } }
+    table { width: 100%; border-collapse: collapse; }
+    .res td { padding: 6px 4px; border-top: 1px solid var(--line); }
+    .res td:first-child { color: var(--mute); }
+    .res td:last-child { text-align: right; font-weight: 600; }
+    .pw { color: var(--bad); font-weight: 600; margin-top: 10px; font-size: 14px; }
+    .pok { color: var(--mute); margin-top: 10px; font-size: 14px; }
+    .pout .pw:first-child, .pout .pok:first-child { margin-top: 0; }
+    .note { color: var(--mute); font-size: 13px; margin: 8px 0 0; }
+    .how { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .how summary { cursor: pointer; font-weight: 600; }
+    .how li { margin: 6px 0; font-size: 14.5px; line-height: 1.5; }
+    .btn {
+      font: inherit;
+      font-weight: 600;
+      padding: 6px 14px;
+      border: 1.5px solid var(--ink);
+      border-radius: 6px;
+      background: none;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .ctl { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+    .ctl input[type=range] { flex: 1; accent-color: var(--belt); }
+    .ctl span { min-width: 150px; text-align: right; color: var(--mute); font-size: 14px; }
+    .tip {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      border: 1px solid var(--mute);
+      background: none;
+      color: var(--mute);
+      font: 600 10px/1 "Barlow Semi Condensed", system-ui, sans-serif;
+      padding: 0;
+      margin-left: 5px;
+      cursor: help;
+      vertical-align: 1px;
+    }
+    .tip:hover, .tip:focus-visible { color: var(--belt); border-color: var(--belt); outline: 0; }
+    .tipbox {
+      position: fixed;
+      z-index: 10;
+      max-width: 250px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--paper);
+      font-size: 13px;
+      line-height: 1.35;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, .3);
+      pointer-events: none;
+    }
+    @media (max-width: 520px) {
+      .pair { flex-wrap: wrap; gap: 6px 10px; }
+      .seg:has(label:nth-child(4)) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .seg:has(label:nth-child(4)) span { text-align: center; }
+      .seg:has(label:nth-child(4)) label:nth-child(odd) span { border-left: 0; }
+      .seg:has(label:nth-child(4)) label:nth-child(n+3) span { border-top: 1.5px solid var(--ink); }
+      .ctl { flex-wrap: wrap; }
+      .ctl span { min-width: 0; flex-basis: 100%; text-align: left; }
+    }
+    [hidden] { display: none !important; }
+  </style>
+  <style>
+    /* Index plate, hero, mechanism tiles, and title block */
+    .plate {
+      position: relative;
+      background-color: var(--sheet);
+      background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size: 28px 28px;
+      border: 2px solid var(--ink);
+      padding: 30px 28px 24px;
+    }
+    .plate::before { content: ""; position: absolute; inset: 7px; border: 1px solid var(--ink); pointer-events: none; }
+    .plate::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #3a86ff, #2ec4b6, #ffd23f, var(--belt));
+    }
+    .plate header { margin: 0; }
+    .kick, .sec { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; font-weight: 600; color: var(--mute); }
+    .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 24px; align-items: center; margin: 10px 0 30px; }
+    .hero h1 {
+      font-family: "Chakra Petch", "Barlow Semi Condensed", system-ui, sans-serif;
+      font-size: clamp(30px, 4.6vw, 46px);
+      line-height: 1.05;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin: 0 0 16px;
+    }
+    .hero h1::after { content: ""; display: block; width: 84px; height: 6px; background: var(--belt); margin-top: 14px; }
+    .lede { font-size: 17px; max-width: 44ch; margin: 0 0 14px; }
+    @media (min-width: 761px) { .lede { position: relative; top: 28px; } }
+    #hero { width: 100%; max-width: 400px; height: auto; justify-self: end; margin: 36px 40px 0 0; }
+    .sec { border-bottom: 2px solid var(--belt); padding-bottom: 6px; margin: 0 0 16px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px; }
+    .tile {
+      --c: var(--belt);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 14px;
+      background: var(--panel);
+      background: color-mix(in srgb, var(--c) 13%, var(--panel));
+      border: 1.5px solid var(--ink);
+      border-top: 6px solid var(--c);
+      color: var(--ink);
+      text-decoration: none;
+      transition: transform .15s, box-shadow .15s;
+    }
+    a.tile:hover, a.tile:focus-visible { transform: translate(-3px, -3px); box-shadow: 5px 5px 0 var(--c); outline: 0; }
+    .fig { font-size: 12px; letter-spacing: .14em; color: var(--mute); font-weight: 600; }
+    .ico { width: 100%; height: 88px; color: var(--c); }
+    .tile h2 { font-size: 20px; margin: 0; text-transform: uppercase; letter-spacing: .03em; }
+    .tile p { margin: 0; font-size: 14px; color: var(--mute); flex: 1; }
+    .go {
+      align-self: flex-start;
+      font-weight: 700;
+      color: var(--ink);
+      font-size: 14px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border-bottom: 3px solid var(--c);
+    }
+    .tile.soon { border-style: dashed; border-top-style: solid; background: color-mix(in srgb, var(--c) 6%, transparent); }
+    .tile.soon .go { color: var(--mute); }
+    .tb { display: flex; justify-content: flex-end; flex-wrap: wrap; margin-top: 28px; }
+    .tb div { border: 1.5px solid var(--ink); margin-left: -1.5px; padding: 4px 12px; font-weight: 700; background: var(--panel); }
+    .tb .hl { background: var(--belt); color: var(--paper); }
+    .tb .hl span { color: inherit; opacity: .85; }
+    .tb span { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
+
+    /* Tile icon hover animations */
+    .spin { animation: cw var(--t) linear infinite; }
+    .spinr { animation: ccw var(--t) linear infinite; }
+    .rk { animation: rk 3s linear infinite alternate; }
+    .rp { animation: rp 3s linear infinite alternate; }
+    .fol { animation: fol 6s linear infinite; }
+    .ls { animation: ls 3s linear infinite alternate; }
+    .fb2 { animation: fb2 6s linear infinite; }
+    .fb3 { animation: fb3 6s linear infinite; }
+    .pu { opacity: 0; }
+    .tile .spin, .tile .rk, .tile .rp, .tile .fol, .tile .ls, .tile .fb2, .tile .fb3 { animation-play-state: paused; }
+    .tile:hover .spin, .tile:focus-visible .spin,
+    .tile:hover .rk, .tile:focus-visible .rk,
+    .tile:hover .rp, .tile:focus-visible .rp,
+    .tile:hover .fol, .tile:focus-visible .fol,
+    .tile:hover .ls, .tile:focus-visible .ls,
+    .tile:hover .fb2, .tile:focus-visible .fb2,
+    .tile:hover .fb3, .tile:focus-visible .fb3 { animation-play-state: running; }
+    .tile:hover .pu, .tile:focus-visible .pu { animation: pu 1.8s linear infinite; }
+
+    @keyframes cw { from { transform: rotate(var(--a0)); } to { transform: rotate(calc(var(--a0) + 360deg)); } }
+    @keyframes ccw { from { transform: rotate(var(--a0)); } to { transform: rotate(calc(var(--a0) - 360deg)); } }
+    @keyframes ls { from { transform: translateX(-12px); } to { transform: translateX(12px); } }
+    @keyframes rk { from { transform: translateX(6px); } to { transform: translateX(-6px); } }
+    @keyframes pu {
+      0% { transform: translateX(0); opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { transform: translateX(var(--d)); opacity: 0; }
+    }
+    @keyframes rp { from { transform: rotate(61.35deg); } to { transform: rotate(118.65deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+      .spin, .spinr, .rk, .rp, .fol, .ls, .fb2, .fb3, .pu { animation: none !important; }
+      .spin, .spinr { transform: rotate(var(--a0)); }
+      .rk { transform: translateX(6px); }
+      .rp { transform: rotate(61.35deg); }
+      .fol { transform: translateY(5.86px); }
+    }
+    @media (max-width: 760px) {
+      .hero { grid-template-columns: 1fr; margin-top: 24px; }
+      #hero { justify-self: center; margin: 12px 0 0; max-width: 340px; }
+    }
+    @media (max-width: 520px) {
+      main { padding: 10px; }
+      .plate { padding: 22px 16px 18px; }
+    }
+  </style>
 </head>
 <body>
-<main>
-<div class="plate">
-<header><div class="kick">Mechanical design calculators</div><div id="themeSlot"></div></header>
-<section class="hero">
-<div>
-<h1>Mechanism<br>Toolkit</h1>
-<p class="lede">Belts, gears and linkages you can drag, spin, and size. Every page starts with pure geometry, with a physics toggle if you want forces, torques, and safety factors.</p>
-</div>
-<svg id="hero" viewBox="-28 -38 124 76" role="img" aria-label="Two spur gears meshing and turning"></svg>
-</section>
-<h2 class="sec">Contents</h2>
-<div class="tiles">
-<a class="tile" href="belt.html" style="--c:var(--belt)"><span class="fig">FIG. 01</span><svg class="ico" viewBox="0 0 64 64" data-icon="belt"></svg><h2>Belt drive</h2><p>Layout, belt length, wrap angles, tension and slip.</p><span class="go">Open →</span></a>
-<a class="tile" href="rack-pinion.html" style="--c:#3a86ff"><span class="fig">FIG. 02</span><svg class="ico" viewBox="0 0 64 64" data-icon="rack"></svg><h2>Rack and pinion</h2><p>Involute meshing, contact ratio, forces, motor torque and tooth stress.</p><span class="go">Open →</span></a>
-<a class="tile" href="lead-screw.html" style="--c:#2ec4b6"><span class="fig">FIG. 03</span><svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg><h2>Lead screw</h2><p>Torque, efficiency, self-locking, buckling and critical speed.</p><span class="go">Open →</span></a>
-<a class="tile" href="four-bar.html" style="--c:#8e6bd8"><span class="fig">FIG. 04</span><svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg><h2>Four-bar linkage</h2><p>Grashof type, coupler curves, transmission angle and quick-return.</p><span class="go">Open →</span></a>
-<div class="tile soon" style="--c:#d6479b"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
-<a class="tile" href="cantilever.html" style="--c:var(--cant)"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="cant"></svg><h2>Cantilever beam</h2><p>Bending stress, safety factor, tip deflection, and shear, moment and deflection graphs.</p><span class="go">Open →</span></a>
-<div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 07</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
-<a class="tile" href="op-amps.html" style="--c:#4fb3e8"><span class="fig">FIG. 08</span><svg class="ico" viewBox="0 0 64 64" data-icon="amp"></svg><h2>Op-amp circuits</h2><p>Inverting, summing, difference, integrator and filters, with gain, bandwidth and a Bode plots.</p><span class="go">Open →</span></a>
-<footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
-</div>
-</main>
-<script>
-// Shared by every mechanism page: helpers, theme switcher, help popouts, input clamping.
-const $ = id => document.getElementById(id);
-const TP = 2 * Math.PI;
-const val = id => parseFloat($(id).value);
-const fmt = (x, d = 2) => isFinite(x) ? x.toFixed(d) : "–";
+  <main>
+    <div class="plate">
+      <header>
+        <div class="kick">Mechanical design calculators</div>
+        <div id="themeSlot"></div>
+      </header>
 
-const THEMES = [["drafting", "Drafting"], ["blueprint", "Blueprint"], ["chalkboard", "Chalkboard"], ["graphite", "Graphite"]];
-const THEME_KEY = "beltTheme"; // same key the belt page uses, so the choice carries across pages
-function setTheme(t) {
-  document.documentElement.dataset.theme = t;
-  const r = document.querySelector('input[name=theme][value="' + t + '"]');
-  if (r) r.checked = true;
-  try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
-}
-function initTheme() {
-  const slot = $("themeSlot");
-  if (slot) slot.innerHTML = `<div class="pair"><b>Theme</b><div class="seg" role="radiogroup" aria-label="Theme">${THEMES.map(([v, n]) => `<label><input type="radio" name="theme" value="${v}"><span>${n}</span></label>`).join("")}</div></div>`;
-  let saved = null;
-  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
-  setTheme(THEMES.some(t => t[0] === saved) ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "blueprint" : "drafting"));
-  document.querySelectorAll("input[name=theme]").forEach(r => r.addEventListener("change", () => setTheme(r.value)));
-}
+      <section class="hero">
+        <div>
+          <h1>Mechanism<br>Toolkit</h1>
+          <p class="lede">Belts, gears and linkages you can drag, spin, and size. Every page starts with pure geometry, with a physics toggle if you want forces, torques, and safety factors.</p>
+        </div>
+        <svg id="hero" viewBox="-28 -38 124 76" role="img" aria-label="Two spur gears meshing and turning"></svg>
+      </section>
 
-// Snap typed values back into each field's min/max, then call cb.
-function clampInputs(sel, cb) {
-  document.querySelectorAll(sel).forEach(el => el.addEventListener("change", () => {
-    const lo = parseFloat(el.min), hi = parseFloat(el.max), v = parseFloat(el.value);
-    if (!isFinite(v)) return;
-    const c = Math.min(isFinite(hi) ? hi : Infinity, Math.max(isFinite(lo) ? lo : -Infinity, v));
-    if (c !== v) { el.value = c; cb(); }
-  }));
-}
+      <h2 class="sec">Contents</h2>
 
-// Adds a "?" popout beside each labelled input. TIPS maps input id -> help text.
-function initTips(TIPS) {
-  const box = document.createElement("div");
-  box.className = "tipbox"; box.hidden = true; document.body.appendChild(box);
-  let cur = null;
-  const hide = () => { box.hidden = true; cur = null; };
-  const show = b => {
-    box.textContent = b.dataset.tip; box.hidden = false; cur = b;
-    const r = b.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
-    box.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + "px";
-    box.style.top = (r.bottom + h + 12 > innerHeight ? r.top - h - 6 : r.bottom + 6) + "px";
-  };
-  for (const id in TIPS) {
-    const el = $(id); if (!el) continue;
-    const b = document.createElement("button");
-    b.type = "button"; b.className = "tip"; b.textContent = "?"; b.dataset.tip = TIPS[id];
-    b.setAttribute("aria-label", "About " + el.parentElement.firstChild.textContent.trim());
-    el.before(b);
-  }
-  const canHover = matchMedia("(hover: hover)").matches;
-  document.addEventListener("click", e => {
-    const b = e.target.closest(".tip");
-    if (!b) return hide();
-    e.preventDefault();
-    if (canHover || cur !== b) show(b); else hide();
-  });
-  if (canHover) document.addEventListener("mouseover", e => { const b = e.target.closest(".tip"); if (b) show(b); else if (cur) hide(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
-  addEventListener("scroll", hide, true);
-}
+      <div class="tiles">
+        <a class="tile" href="belt.html" style="--c:var(--belt)">
+          <span class="fig">FIG. 01</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="belt"></svg>
+          <h2>Belt drive</h2>
+          <p>Layout, belt length, wrap angles, tension and slip.</p>
+          <span class="go">Open →</span>
+        </a>
 
-initTheme();
-</script>
-<script>
-const TAU = 2 * Math.PI, byId = id => document.getElementById(id);
-// Involute spur-gear outline centred on the origin, tooth 0 on +x. Teeth are 8% thinner than the gap pitch for backlash.
-function gearD(z, m) {
-  const al = Math.PI / 9, r = m * z / 2, rb = r * Math.cos(al), ra = r + m, rf = r - 1.25 * m, inv = a => Math.tan(a) - a, iA = inv(al);
-  const half = q => Math.max(0, .92 * Math.PI / (2 * z) - (inv(Math.acos(Math.min(1, rb / q))) - iA));
-  const r0 = Math.max(rb, rf), fl = [];
-  for (let i = 0; i <= 6; i++) { const q = r0 + (ra - r0) * i / 6; fl.push([q, half(q)]); }
-  const root = rf < rb ? [[rf, half(rb)]] : [];
-  const tooth = [...root.map(([q, a]) => [q, -a]), ...fl.map(([q, a]) => [q, -a]), ...fl.slice().reverse(), ...root];
-  let d = "";
-  for (let k = 0; k < z; k++) tooth.forEach(([q, a], i) => { const t = a + TAU * k / z; d += (k + i ? "L" : "M") + (q * Math.cos(t)).toFixed(2) + " " + (q * Math.sin(t)).toFixed(2); });
-  return d + "Z";
-}
-// Closed belt outline around two circles [x, y, r].
-function hull(a, b) {
-  const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy), f = Math.atan2(dy, dx), be = Math.acos((a[2] - b[2]) / d), pts = [];
-  const arc = (c, a0, a1) => { for (let i = 0; i <= 24; i++) { const t = a0 + (a1 - a0) * i / 24; pts.push((c[0] + c[2] * Math.cos(t)).toFixed(1) + " " + (c[1] + c[2] * Math.sin(t)).toFixed(1)); } };
-  arc(b, f - be, f + be); arc(a, f + be, f - be + TAU);
-  return "M" + pts.join("L") + "Z";
-}
-const spin = (x, y, t, a0, inner, cls = "spin") => `<g transform="translate(${x},${y})"><g class="${cls}" style="--a0:${a0}deg;--t:${t}s">${inner}</g></g>`;
-const line = "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'";
+        <a class="tile" href="rack-pinion.html" style="--c:#3a86ff">
+          <span class="fig">FIG. 02</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="rack"></svg>
+          <h2>Rack and pinion</h2>
+          <p>Involute meshing, contact ratio, forces, motor torque and tooth stress.</p>
+          <span class="go">Open →</span>
+        </a>
 
-// Hero: 14T drives 21T (module 3), so the speeds stay in the ratio 21 : 14. Slow on purpose.
-const gear = (d, r, c) => `<path d="${d}" fill="${c}" fill-opacity=".3" stroke="${c}" stroke-width=".9" stroke-linejoin="round"/><circle r="${r}" fill="none" stroke="${c}" stroke-width=".7"/><line x1="0" y1="0" x2="${r * 2.2}" y2="0" stroke="var(--label)" stroke-width=".9" stroke-linecap="round"/>`;
-byId("hero").innerHTML =
-  `<g stroke="var(--mute)" stroke-width=".3" stroke-dasharray="4 1 1 1"><line x1="-28" y1="0" x2="96" y2="0"/><line x1="0" y1="-30" x2="0" y2="30"/><line x1="52.5" y1="-38" x2="52.5" y2="38"/></g>` +
-  spin(0, 0, 40, 0, gear(gearD(14, 3), 4, "var(--belt)")) + spin(52.5, 0, 60, 180 + 180 / 21, gear(gearD(21, 3), 5, "#3a86ff"), "spinr") +
-  `<circle r="21" fill="none" stroke="var(--belt)" stroke-width=".4" stroke-dasharray="2 1.5"/><circle cx="52.5" r="31.5" fill="none" stroke="var(--belt)" stroke-width=".4" stroke-dasharray="2 1.5"/>`;
+        <a class="tile" href="lead-screw.html" style="--c:#2ec4b6">
+          <span class="fig">FIG. 03</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="screw"></svg>
+          <h2>Lead screw</h2>
+          <p>Torque, efficiency, self-locking, buckling and critical speed.</p>
+          <span class="go">Open →</span>
+        </a>
 
-const ICONS = {
-  belt: () => `<path d="${hull([18, 38, 10], [46, 30, 14])}" ${line}/><circle cx="18" cy="38" r="6.5" ${line}/><circle cx="46" cy="30" r="10.5" ${line}/>` + spin(18, 38, 6, 0, `<line x1="-6.5" y1="0" x2="6.5" y2="0" ${line}/><circle r="1.5" ${line}/>`) + spin(46, 30, 8, 0, `<line x1="-10.5" y1="0" x2="10.5" y2="0" ${line}/><circle r="2" ${line}/>`),
-  rack: () => {
-    // module 3: pitch 9.42, 20° flanks, tooth 8% thin; pitch line y = 38, tips y = 35, roots y = 41.75, base y = 47
-    const p = Math.PI * 3, t = Math.tan(Math.PI / 9), hp = .92 * p / 4, w = h => hp - h * t;
-    let d = "", first = 32 + p / 2 - 3 * p;
-    d += `M${first - w(-3.75)} 47V41.75`;
-    for (let k = -3; k <= 2; k++) { const c = 32 + p / 2 + k * p; d += `L${c - w(-3.75)} 41.75L${c - w(3)} 35H${c + w(3)}L${c + w(-3.75)} 41.75`; }
-    d += `V47Z`;
-    return `<g class="rk"><path d="${d}" ${line} stroke-linejoin="miter"/></g><g transform="translate(32,26)"><g class="rp"><path d="${gearD(8, 3)}" ${line}/><circle r="3" ${line}/></g></g>`;
-  },
-  screw: () => {
-    let d = "";
-    for (let x = -26; x <= 82; x += 8) d += `M${x} 38L${x + 4} 26`; // extra length so both ends stay covered while the lines slide ±12
-    return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} style="stroke-width:1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
-  },
-  four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="11" y2="0" ${line} style="stroke-width:3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
-  // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
-  cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
-  // Cantilever: wall, dashed unloaded beam, then a beam and arrow that the controller below redraws each frame.
-  cant: () => `<path d="M10 30H54" ${line} stroke-dasharray="2 3" opacity=".45"/><path d="M10 16V44M10 20L5 25M10 26L5 31M10 32L5 37M10 38L5 43" ${line}/><path class="cb" ${line}/><path class="ca" style="stroke-width:1.5" ${line}/>`,
-  // Op-amp: centred triangle with − and + inside, symmetric leads, and pulses aligned to the lead spans on hover.
-  amp: () => `<path d="M18 10V54L50 32Z" ${line}/><path d="M23 22H29M23 42H29M26 39V45" ${line} style="stroke-width:1.6"/><path d="M6 22H18M6 42H18M50 32H60" ${line}/><circle class="pu" style="--d:10px" cx="7" cy="22" r="2" fill="currentColor"/><circle class="pu" style="--d:10px;animation-delay:.3s" cx="7" cy="42" r="2" fill="currentColor"/><circle class="pu" style="--d:9px;animation-delay:.85s" cx="51" cy="32" r="2" fill="currentColor"/>`,
-  motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
-};
-{
-  const R = 12, e = 5, rho = 3, N = 36, kf = [];
-  for (let k = 0; k <= N; k++) {
-    const th = TAU * k / N, y = Math.sqrt((R + rho) ** 2 - (e * Math.cos(th)) ** 2) - e * Math.sin(th); // roller height above the cam pivot
-    kf.push(`${(100 * k / N).toFixed(2)}%{transform:translateY(${(R + rho + e - y).toFixed(3)}px)}`);
-  }
-  const st = document.createElement("style"); st.textContent = "@keyframes fol{" + kf.join("") + "}"; document.head.appendChild(st);
-}
-{
-  // Icon crank-rocker: pivots 32 apart, links 11 / 26 / 22, screen coordinates (y down), crank turning clockwise.
-  const d = 32, r2 = 11, r3 = 26, r4 = 22, N = 36, k3 = [], k2 = [];
-  let a3p = null, a4p = null;
-  const unw = (a, p) => { if (p === null) return a; while (a - p > Math.PI) a -= TAU; while (a - p < -Math.PI) a += TAU; return a; };
-  for (let k = 0; k <= N; k++) {
-    const t = -TAU * k / N, Ax = r2 * Math.cos(t), Ay = r2 * Math.sin(t), dx = d - Ax, dy = -Ay, D = Math.hypot(dx, dy);
-    const a = (r3 * r3 - r4 * r4 + D * D) / (2 * D), h = Math.sqrt(r3 * r3 - a * a);
-    const Bx = Ax + a * dx / D - h * dy / D, By = Ay + a * dy / D + h * dx / D;
-    a3p = unw(Math.atan2(-By + Ay, Bx - Ax), a3p); a4p = unw(Math.atan2(-By, Bx - d), a4p);
-    const pc = (100 * k / N).toFixed(2);
-    k3.push(`${pc}%{transform:translate(${Ax.toFixed(3)}px,${(-Ay).toFixed(3)}px) rotate(${(a3p * 180 / Math.PI).toFixed(2)}deg)}`);
-    k2.push(`${pc}%{transform:rotate(${(a4p * 180 / Math.PI).toFixed(2)}deg)}`);
-  }
-  const st2 = document.createElement("style");
-  st2.textContent = `@keyframes fb3{${k3.join("")}}@keyframes fb2{${k2.join("")}}@media (prefers-reduced-motion:reduce){.fb3{transform:${k3[0].match(/\{transform:(.*)\}/)[1]}}.fb2{transform:${k2[0].match(/\{transform:(.*)\}/)[1]}}}`;
-  document.head.appendChild(st2);
-}
-document.querySelectorAll("[data-icon]").forEach(s => s.innerHTML = ICONS[s.dataset.icon]());
-{
-  // Cantilever icon: a small, slow deflection (exaggerated only enough to read at icon size) as the arrow loads the tip.
-  // The beam is the outline of a thin strip along y = d(3u^2 - u^3)/2 (end-load shape), redrawn each frame.
-  // Runs only while the tile is hovered or focused, and stays still under prefers-reduced-motion.
-  const svg = document.querySelector("[data-icon=cant]"), tile = svg.closest(".tile");
-  const beam = svg.querySelector(".cb"), arrow = svg.querySelector(".ca");
-  const x0 = 10, L = 44, y0 = 30, h = 5, D = 5, N = 16, T = 5, rm = matchMedia("(prefers-reduced-motion: reduce)");
-  const f = v => v.toFixed(2), pt = p => f(p[0]) + " " + f(p[1]);
-  const draw = s => {
-    const d = D * s, top = [], bot = [];
-    for (let i = 0; i <= N; i++) {
-      const u = i / N, y = d * (3 * u * u - u ** 3) / 2, th = Math.atan(d * (6 * u - 3 * u * u) / 2 / L), x = x0 + L * u;
-      const nx = Math.sin(th) * h / 2, ny = -Math.cos(th) * h / 2; // upward normal
-      top.push([x + nx, y0 + y + ny]); bot.push([x - nx, y0 + y - ny]);
+        <a class="tile" href="four-bar.html" style="--c:#8e6bd8">
+          <span class="fig">FIG. 04</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="four"></svg>
+          <h2>Four-bar linkage</h2>
+          <p>Grashof type, coupler curves, transmission angle and quick-return.</p>
+          <span class="go">Open →</span>
+        </a>
+
+        <div class="tile soon" style="--c:#d6479b">
+          <span class="fig">FIG. 05</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg>
+          <h2>Cam and follower</h2>
+          <p>Motion profiles and pressure angle.</p>
+          <span class="go">Planned</span>
+        </div>
+
+        <a class="tile" href="cantilever.html" style="--c:var(--cant)">
+          <span class="fig">FIG. 06</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="cant"></svg>
+          <h2>Cantilever beam</h2>
+          <p>Bending stress, safety factor, tip deflection, and shear, moment and deflection graphs.</p>
+          <span class="go">Open →</span>
+        </a>
+
+        <div class="tile soon" style="--c:#e5484d">
+          <span class="fig">FIG. 07</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg>
+          <h2>Motor sizing</h2>
+          <p>Motion profile, reflected inertia and RMS torque.</p>
+          <span class="go">Planned</span>
+        </div>
+
+        <a class="tile" href="op-amps.html" style="--c:#4fb3e8">
+          <span class="fig">FIG. 08</span>
+          <svg class="ico" viewBox="0 0 64 64" data-icon="amp"></svg>
+          <h2>Op-amp circuits</h2>
+          <p>Inverting, summing, difference, integrator and filters, with gain, bandwidth and Bode plots.</p>
+          <span class="go">Open →</span>
+        </a>
+      </div>
+
+      <footer class="tb">
+        <div class="hl"><span>Title</span>Mechanism Toolkit</div>
+        <div><span>Drawing no.</span>MT-001</div>
+        <div><span>Scale</span>1 : 1</div>
+        <div><span>By</span>SK</div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    // Shared by every mechanism page: helpers, theme switcher, help popouts, input clamping.
+    const $ = id => document.getElementById(id);
+    const TP = 2 * Math.PI;
+    const val = id => parseFloat($(id).value);
+    const fmt = (x, d = 2) => isFinite(x) ? x.toFixed(d) : "–";
+
+    const THEMES = [["drafting", "Drafting"], ["blueprint", "Blueprint"], ["chalkboard", "Chalkboard"], ["graphite", "Graphite"]];
+    const THEME_KEY = "beltTheme"; // same key the belt page uses, so the choice carries across pages
+
+    function setTheme(t) {
+      document.documentElement.dataset.theme = t;
+      const r = document.querySelector(`input[name=theme][value="${t}"]`);
+      if (r) r.checked = true;
+      try { localStorage.setItem(THEME_KEY, t); } catch (e) {}
     }
-    beam.setAttribute("d", "M" + top.map(pt).join("L") + "L" + bot.reverse().map(pt).join("L") + "Z");
-    const [ax, ay] = top[N], ty = ay - 3 * (1 - s); // arrow tip just meets the beam at full load
-    arrow.setAttribute("d", `M${f(ax)} ${f(ty - 14)}V${f(ty)}M${f(ax - 2.5)} ${f(ty - 4)}L${f(ax)} ${f(ty)}L${f(ax + 2.5)} ${f(ty - 4)}`);
-  };
-  // Load profile over one cycle: ease on, brief hold, ease off, short rest.
-  const ease = x => (1 - Math.cos(Math.PI * x)) / 2;
-  const load = p => p < .4 ? ease(p / .4) : p < .55 ? 1 : p < .95 ? ease(1 - (p - .55) / .4) : 0;
-  let t = 0, last = null, raf = 0;
-  const step = now => {
-    if (last !== null) t = (t + (now - last) / 1000) % T;
-    last = now;
-    draw(load(t / T));
-    raf = requestAnimationFrame(step);
-  };
-  const play = () => { if (!rm.matches && !raf) raf = requestAnimationFrame(step); };
-  const stop = () => { cancelAnimationFrame(raf); raf = 0; last = null; };
-  draw(rm.matches ? 0.7 : 0);
-  tile.addEventListener("mouseenter", play); tile.addEventListener("mouseleave", stop);
-  tile.addEventListener("focusin", play); tile.addEventListener("focusout", stop);
-}
-</script>
+
+    function initTheme() {
+      const slot = $("themeSlot");
+      if (slot) {
+        slot.innerHTML = `<div class="pair"><b>Theme</b><div class="seg" role="radiogroup" aria-label="Theme">${THEMES.map(([v, n]) => `<label><input type="radio" name="theme" value="${v}"><span>${n}</span></label>`).join("")}</div></div>`;
+      }
+      let saved = null;
+      try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+      setTheme(THEMES.some(t => t[0] === saved) ? saved : (matchMedia("(prefers-color-scheme: dark)").matches ? "blueprint" : "drafting"));
+      document.querySelectorAll("input[name=theme]").forEach(r => r.addEventListener("change", () => setTheme(r.value)));
+    }
+
+    // Snap typed values back into each field's min/max, then call cb.
+    function clampInputs(sel, cb) {
+      document.querySelectorAll(sel).forEach(el => el.addEventListener("change", () => {
+        const lo = parseFloat(el.min), hi = parseFloat(el.max), v = parseFloat(el.value);
+        if (!isFinite(v)) return;
+        const c = Math.min(isFinite(hi) ? hi : Infinity, Math.max(isFinite(lo) ? lo : -Infinity, v));
+        if (c !== v) { el.value = c; cb(); }
+      }));
+    }
+
+    // Adds a "?" popout beside each labelled input. TIPS maps input id -> help text.
+    function initTips(TIPS) {
+      const box = document.createElement("div");
+      box.className = "tipbox";
+      box.hidden = true;
+      document.body.appendChild(box);
+      let cur = null;
+      const hide = () => { box.hidden = true; cur = null; };
+      const show = b => {
+        box.textContent = b.dataset.tip;
+        box.hidden = false;
+        cur = b;
+        const r = b.getBoundingClientRect(), w = box.offsetWidth, h = box.offsetHeight;
+        box.style.left = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8) + "px";
+        box.style.top = (r.bottom + h + 12 > innerHeight ? r.top - h - 6 : r.bottom + 6) + "px";
+      };
+      for (const id in TIPS) {
+        const el = $(id);
+        if (!el) continue;
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tip";
+        b.textContent = "?";
+        b.dataset.tip = TIPS[id];
+        b.setAttribute("aria-label", "About " + el.parentElement.firstChild.textContent.trim());
+        el.before(b);
+      }
+      const canHover = matchMedia("(hover: hover)").matches;
+      document.addEventListener("click", e => {
+        const b = e.target.closest(".tip");
+        if (!b) return hide();
+        e.preventDefault();
+        if (canHover || cur !== b) show(b);
+        else hide();
+      });
+      if (canHover) {
+        document.addEventListener("mouseover", e => {
+          const b = e.target.closest(".tip");
+          if (b) show(b);
+          else if (cur) hide();
+        });
+      }
+      document.addEventListener("keydown", e => { if (e.key === "Escape") hide(); });
+      addEventListener("scroll", hide, true);
+    }
+
+    initTheme();
+  </script>
+
+  <script>
+    (() => {
+      const TAU = TP;
+
+      // Involute spur-gear outline centred on the origin, tooth 0 on +x. Teeth are 8% thinner than the gap pitch for backlash.
+      function gearD(z, m) {
+        const al = Math.PI / 9, r = m * z / 2, rb = r * Math.cos(al), ra = r + m, rf = r - 1.25 * m;
+        const inv = a => Math.tan(a) - a, iA = inv(al);
+        const half = q => Math.max(0, .92 * Math.PI / (2 * z) - (inv(Math.acos(Math.min(1, rb / q))) - iA));
+        const r0 = Math.max(rb, rf), fl = [];
+        for (let i = 0; i <= 6; i++) {
+          const q = r0 + (ra - r0) * i / 6;
+          fl.push([q, half(q)]);
+        }
+        const root = rf < rb ? [[rf, half(rb)]] : [];
+        const tooth = [...root.map(([q, a]) => [q, -a]), ...fl.map(([q, a]) => [q, -a]), ...fl.slice().reverse(), ...root];
+        let d = "";
+        for (let k = 0; k < z; k++) {
+          tooth.forEach(([q, a], i) => {
+            const t = a + TAU * k / z;
+            d += (k + i ? "L" : "M") + (q * Math.cos(t)).toFixed(2) + " " + (q * Math.sin(t)).toFixed(2);
+          });
+        }
+        return d + "Z";
+      }
+
+      // Closed belt outline around two circles [x, y, r].
+      function hull(a, b) {
+        const dx = b[0] - a[0], dy = b[1] - a[1], d = Math.hypot(dx, dy);
+        const f = Math.atan2(dy, dx), be = Math.acos((a[2] - b[2]) / d), pts = [];
+        const arc = (c, a0, a1) => {
+          for (let i = 0; i <= 24; i++) {
+            const t = a0 + (a1 - a0) * i / 24;
+            pts.push((c[0] + c[2] * Math.cos(t)).toFixed(1) + " " + (c[1] + c[2] * Math.sin(t)).toFixed(1));
+          }
+        };
+        arc(b, f - be, f + be);
+        arc(a, f + be, f - be + TAU);
+        return "M" + pts.join("L") + "Z";
+      }
+
+      const spin = (x, y, t, a0, inner, cls = "spin") =>
+        `<g transform="translate(${x},${y})"><g class="${cls}" style="--a0:${a0}deg;--t:${t}s">${inner}</g></g>`;
+      const line = "fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'";
+
+      // Hero: 14T drives 21T (module 3), so the speeds stay in the ratio 21 : 14. Slow on purpose.
+      const gear = (d, r, c) =>
+        `<path d="${d}" fill="${c}" fill-opacity=".3" stroke="${c}" stroke-width=".9" stroke-linejoin="round"/><circle r="${r}" fill="none" stroke="${c}" stroke-width=".7"/><line x1="0" y1="0" x2="${r * 2.2}" y2="0" stroke="var(--label)" stroke-width=".9" stroke-linecap="round"/>`;
+
+      $("hero").innerHTML =
+        `<g stroke="var(--mute)" stroke-width=".3" stroke-dasharray="4 1 1 1"><line x1="-28" y1="0" x2="96" y2="0"/><line x1="0" y1="-30" x2="0" y2="30"/><line x1="52.5" y1="-38" x2="52.5" y2="38"/></g>` +
+        spin(0, 0, 40, 0, gear(gearD(14, 3), 4, "var(--belt)")) +
+        spin(52.5, 0, 60, 180 + 180 / 21, gear(gearD(21, 3), 5, "#3a86ff"), "spinr") +
+        `<circle r="21" fill="none" stroke="var(--belt)" stroke-width=".4" stroke-dasharray="2 1.5"/><circle cx="52.5" r="31.5" fill="none" stroke="var(--belt)" stroke-width=".4" stroke-dasharray="2 1.5"/>`;
+
+      const ICONS = {
+        belt: () =>
+          `<path d="${hull([18, 38, 10], [46, 30, 14])}" ${line}/><circle cx="18" cy="38" r="6.5" ${line}/><circle cx="46" cy="30" r="10.5" ${line}/>` +
+          spin(18, 38, 6, 0, `<line x1="-6.5" y1="0" x2="6.5" y2="0" ${line}/><circle r="1.5" ${line}/>`) +
+          spin(46, 30, 8, 0, `<line x1="-10.5" y1="0" x2="10.5" y2="0" ${line}/><circle r="2" ${line}/>`),
+
+        rack: () => {
+          // module 3: pitch 9.42, 20° flanks, tooth 8% thin; pitch line y = 38, tips y = 35, roots y = 41.75, base y = 47
+          const p = Math.PI * 3, t = Math.tan(Math.PI / 9), hp = .92 * p / 4, w = h => hp - h * t;
+          const first = 32 + p / 2 - 3 * p;
+          let d = `M${first - w(-3.75)} 47V41.75`;
+          for (let k = -3; k <= 2; k++) {
+            const c = 32 + p / 2 + k * p;
+            d += `L${c - w(-3.75)} 41.75L${c - w(3)} 35H${c + w(3)}L${c + w(-3.75)} 41.75`;
+          }
+          d += "V47Z";
+          return `<g class="rk"><path d="${d}" ${line} stroke-linejoin="miter"/></g><g transform="translate(32,26)"><g class="rp"><path d="${gearD(8, 3)}" ${line}/><circle r="3" ${line}/></g></g>`;
+        },
+
+        screw: () => {
+          let d = "";
+          for (let x = -26; x <= 82; x += 8) d += `M${x} 38L${x + 4} 26`;
+          return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} style="stroke-width:1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
+        },
+
+        four: () =>
+          `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` +
+          spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="11" y2="0" ${line} style="stroke-width:3"/>`) +
+          `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
+
+        // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower.
+        cam: () =>
+          `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
+
+        // Cantilever: wall, dashed unloaded beam, plus dynamic beam and load arrow.
+        cant: () =>
+          `<path d="M10 30H54" ${line} stroke-dasharray="2 3" opacity=".45"/><path d="M10 16V44M10 20L5 25M10 26L5 31M10 32L5 37M10 38L5 43" ${line}/><path class="cb" ${line}/><path class="ca" style="stroke-width:1.5" ${line}/>`,
+
+        // Op-amp: centred triangle with − and + inside, symmetric leads, and pulses aligned to lead spans on hover.
+        amp: () =>
+          `<path d="M18 10V54L50 32Z" ${line}/><path d="M23 22H29M23 42H29M26 39V45" ${line} style="stroke-width:1.6"/><path d="M6 22H18M6 42H18M50 32H60" ${line}/><circle class="pu" style="--d:10px" cx="7" cy="22" r="2" fill="currentColor"/><circle class="pu" style="--d:10px;animation-delay:.3s" cx="7" cy="42" r="2" fill="currentColor"/><circle class="pu" style="--d:9px;animation-delay:.85s" cx="51" cy="32" r="2" fill="currentColor"/>`,
+
+        motor: () =>
+          `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
+      };
+
+      // Cam follower keyframes
+      {
+        const R = 12, e = 5, rho = 3, N = 36, kf = [];
+        for (let k = 0; k <= N; k++) {
+          const th = TAU * k / N;
+          const y = Math.sqrt((R + rho) ** 2 - (e * Math.cos(th)) ** 2) - e * Math.sin(th);
+          kf.push(`${(100 * k / N).toFixed(2)}%{transform:translateY(${(R + rho + e - y).toFixed(3)}px)}`);
+        }
+        const st = document.createElement("style");
+        st.textContent = `@keyframes fol{${kf.join("")}}`;
+        document.head.appendChild(st);
+      }
+
+      // Four-bar crank-rocker keyframes (pivots 32 apart, links 11 / 26 / 22)
+      {
+        const d = 32, r2 = 11, r3 = 26, r4 = 22, N = 36, k3 = [], k2 = [];
+        let a3p = null, a4p = null;
+        const unw = (a, p) => {
+          if (p === null) return a;
+          while (a - p > Math.PI) a -= TAU;
+          while (a - p < -Math.PI) a += TAU;
+          return a;
+        };
+        for (let k = 0; k <= N; k++) {
+          const t = -TAU * k / N, Ax = r2 * Math.cos(t), Ay = r2 * Math.sin(t);
+          const dx = d - Ax, dy = -Ay, D = Math.hypot(dx, dy);
+          const a = (r3 * r3 - r4 * r4 + D * D) / (2 * D), h = Math.sqrt(r3 * r3 - a * a);
+          const Bx = Ax + a * dx / D - h * dy / D, By = Ay + a * dy / D + h * dx / D;
+          a3p = unw(Math.atan2(-By + Ay, Bx - Ax), a3p);
+          a4p = unw(Math.atan2(-By, Bx - d), a4p);
+          const pc = (100 * k / N).toFixed(2);
+          k3.push(`${pc}%{transform:translate(${Ax.toFixed(3)}px,${(-Ay).toFixed(3)}px) rotate(${(a3p * 180 / Math.PI).toFixed(2)}deg)}`);
+          k2.push(`${pc}%{transform:rotate(${(a4p * 180 / Math.PI).toFixed(2)}deg)}`);
+        }
+        const st = document.createElement("style");
+        st.textContent =
+          `@keyframes fb3{${k3.join("")}}` +
+          `@keyframes fb2{${k2.join("")}}` +
+          `@media (prefers-reduced-motion:reduce){.fb3{transform:${k3[0].match(/\{transform:(.*)\}/)[1]}}.fb2{transform:${k2[0].match(/\{transform:(.*)\}/)[1]}}}`;
+        document.head.appendChild(st);
+      }
+
+      document.querySelectorAll("[data-icon]").forEach(s => {
+        s.innerHTML = ICONS[s.dataset.icon]();
+      });
+
+      // Cantilever beam animation on hover/focus
+      {
+        const svg = document.querySelector("[data-icon=cant]"), tile = svg.closest(".tile");
+        const beam = svg.querySelector(".cb"), arrow = svg.querySelector(".ca");
+        const x0 = 10, L = 44, y0 = 30, h = 5, D = 5, N = 16, T = 5;
+        const rm = matchMedia("(prefers-reduced-motion: reduce)");
+        const f = v => v.toFixed(2), pt = p => f(p[0]) + " " + f(p[1]);
+
+        const draw = s => {
+          const d = D * s, top = [], bot = [];
+          for (let i = 0; i <= N; i++) {
+            const u = i / N, y = d * (3 * u * u - u ** 3) / 2;
+            const th = Math.atan(d * (6 * u - 3 * u * u) / 2 / L), x = x0 + L * u;
+            const nx = Math.sin(th) * h / 2, ny = -Math.cos(th) * h / 2;
+            top.push([x + nx, y0 + y + ny]);
+            bot.push([x - nx, y0 + y - ny]);
+          }
+          beam.setAttribute("d", "M" + top.map(pt).join("L") + "L" + bot.reverse().map(pt).join("L") + "Z");
+          const [ax, ay] = top[N], ty = ay - 3 * (1 - s);
+          arrow.setAttribute("d", `M${f(ax)} ${f(ty - 14)}V${f(ty)}M${f(ax - 2.5)} ${f(ty - 4)}L${f(ax)} ${f(ty)}L${f(ax + 2.5)} ${f(ty - 4)}`);
+        };
+
+        const ease = x => (1 - Math.cos(Math.PI * x)) / 2;
+        const load = p => p < .4 ? ease(p / .4) : p < .55 ? 1 : p < .95 ? ease(1 - (p - .55) / .4) : 0;
+
+        let t = 0, last = null, raf = 0;
+        const step = now => {
+          if (last !== null) t = (t + (now - last) / 1000) % T;
+          last = now;
+          draw(load(t / T));
+          raf = requestAnimationFrame(step);
+        };
+        const play = () => { if (!rm.matches && !raf) raf = requestAnimationFrame(step); };
+        const stop = () => { cancelAnimationFrame(raf); raf = 0; last = null; };
+
+        draw(rm.matches ? 0.7 : 0);
+        tile.addEventListener("mouseenter", play);
+        tile.addEventListener("mouseleave", stop);
+        tile.addEventListener("focusin", play);
+        tile.addEventListener("focusout", stop);
+      }
+    })();
+  </script>
 </body>
 </html>
