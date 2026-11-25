@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Resistor Network Solver</title>
+<meta name="description" content="Solve a loaded voltage divider, a series string or a parallel bank: equivalent resistance, currents, power, Thévenin equivalent, tolerance and standard E-series values.">
+<meta name="theme-color" content="#12304a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/theme.css">
+<style>
+svg{display:block;width:100%;height:auto}
+svg text{font:600 11px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--label);text-anchor:middle}
+svg text.l{text-anchor:start}
+.w{fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.out{stroke:var(--belt)}
+.dot{fill:var(--ink)}
+.pr th{font-size:13px;color:var(--mute);font-weight:600;text-align:right;padding:4px}
+.pr td{text-align:right;padding:6px 4px;border-top:1px solid var(--line);font-weight:600}
+.pr th:first-child,.pr td:first-child{text-align:left}
+.pr td:first-child{color:var(--mute);font-weight:500}
+.pr td.ov{color:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+<header>
+<h1><a class="back" href="index.html" aria-label="All mechanisms">←</a> Resistor Networks</h1>
+<div class="grp"><div id="themeSlot"></div></div>
+</header>
+
+<div class="layout">
+<div>
+<div class="sheet"><svg id="sch" viewBox="0 0 320 210" role="img" aria-label="Resistor network schematic"></svg></div>
+<div class="card" style="margin-top:12px"><h2>Per resistor</h2><table class="pr"><thead><tr><th>Resistor</th><th>R</th><th>Voltage</th><th>Current</th><th>Power</th></tr></thead><tbody id="per"></tbody></table></div>
+<p class="note">Ideal source and resistors. Blank optional fields are treated as not fitted. The orange wire is the output node.</p>
+</div>
+<div class="card">
+<div class="read">
+<div class="big"><small id="bl">Vout</small><b id="bv">–</b></div>
+<div><small id="l2">Ratio Vout / Vin</small><b id="b2">–</b></div>
+<div><small id="l3">Supply current</small><b id="b3">–</b></div>
+</div>
+<div class="pgrid g2">
+<label>Network<select id="mode"><option value="div">Voltage divider (with load)</option><option value="ser">Series string</option><option value="par">Parallel bank</option></select></label>
+<label>Vin (V)<input type="number" id="vin" value="12" step="any" min="0.001" max="10000"></label>
+<label><span id="l1">R1 (kΩ)</span><input type="number" id="r1" value="10" step="any" min="0.001" max="1e6"></label>
+<label><span id="lr2">R2 (kΩ)</span><input type="number" id="r2" value="3.3" step="any" min="0.001" max="1e6"></label>
+<label><span id="lr3">Load RL (kΩ, optional)</span><input type="number" id="r3" step="any" min="0.001" max="1e6"></label>
+<label id="L4" hidden><span>R4 (kΩ, optional)</span><input type="number" id="r4" step="any" min="0.001" max="1e6"></label>
+<label id="Lt"><span>Tolerance (%)</span><input type="number" id="tol" value="1" step="any" min="0" max="20"></label>
+<label id="Lg"><span>Target Vout (V, optional)</span><input type="number" id="tgt" step="any" min="0"></label>
+<label>Power rating (mW)<input type="number" id="rate" value="250" step="any" min="1" max="1e6"></label>
+<label>Standard series<select id="eser"><option value="e24">E24</option><option value="e12">E12</option><option value="e96">E96</option></select></label>
+</div>
+<div id="gwarn"></div>
+<table class="res"><tbody id="res"></tbody></table>
+</div>
+</div>
+
+<details class="how card" style="margin-top:16px"><summary>Equations used</summary><ul>
+<li>Divider: Vout = Vin·R2/(R1 + R2). With a load, R2 is replaced by R2‖RL = R2·RL/(R2 + RL), so Vout = Vin·(R2‖RL)/(R1 + R2‖RL).</li>
+<li>Thévenin equivalent seen by the load: Vth = Vin·R2/(R1 + R2), Rth = R1‖R2. The loaded output is Vth·RL/(Rth + RL).</li>
+<li>Series: Req = ΣR, I = Vin/Req, each drop V = I·R. Parallel: 1/Req = Σ(1/R), each branch current I = Vin/R.</li>
+<li>Power in each resistor: P = V·I = I²R = V²/R. Compare against the rating; leave a margin of at least 2×.</li>
+<li>Tolerance: worst-case Vout comes from R1 high with R2 (and RL) low, and the reverse, each by ±tolerance.</li>
+<li>Target Vout: Rbot = R1·Vt/(Vin − Vt) (or R1 = Rbot·(Vin − Vt)/Vt), where Rbot is R2 unloaded or R2‖RL when a load is fitted, then the nearest value in the chosen series. E12 and E24 are the standard lists; E96 is computed as 10^(n/96) rounded to three digits.</li>
+<li>Loading rule of thumb: keep RL at least 10 × R2 to hold the error near 10%, 100 × R2 for about 1%, or buffer the tap with an op-amp follower.</li>
+</ul></details>
+</main>
+
+<script src="shared/ui.js"></script>
+<script>
+const wire = d => `<path class="w" d="${d}"/>`, dot = (x, y) => `<circle class="dot" cx="${x}" cy="${y}" r="2.6"/>`;
+const gnd = (x, y) => wire(`M${x} ${y}V${y + 5}M${x - 8} ${y + 5}H${x + 8}M${x - 5} ${y + 9}H${x + 5}M${x - 2} ${y + 13}H${x + 2}`);
+const lab = (x, y, t, a) => `<text${a ? ' class="l"' : ""} x="${x}" y="${y}">${t}</text>`;
+const res = (x, y, rot, t, lx, ly, a) => `<g transform="translate(${x},${y}) rotate(${rot})"><path class="w" d="M-20 0H-12L-9 -5L-3 5L3 -5L9 5L12 0H20"/></g>${lab(lx, ly, t, a)}`;
+
+const fr = o => o >= 1e6 ? fmt(o / 1e6, 3).replace(/\.?0+$/, "") + " MΩ" : o >= 1e3 ? fmt(o / 1e3, 3).replace(/\.?0+$/, "") + " kΩ" : fmt(o, 1).replace(/\.0$/, "") + " Ω";
+const fi = a => Math.abs(a) >= 1 ? fmt(a, 3) + " A" : Math.abs(a) >= 1e-3 ? fmt(a * 1e3, 3) + " mA" : fmt(a * 1e6, 1) + " µA";
+const fp = w => w >= 1 ? fmt(w, 3) + " W" : w >= 1e-3 ? fmt(w * 1e3, 3) + " mW" : fmt(w * 1e6, 1) + " µW";
+const E24 = [1, 1.1, 1.2, 1.3, 1.5, 1.6, 1.8, 2, 2.2, 2.4, 2.7, 3, 3.3, 3.6, 3.9, 4.3, 4.7, 5.1, 5.6, 6.2, 6.8, 7.5, 8.2, 9.1];
+const ES = { e12: E24.filter((_, i) => i % 2 === 0), e24: E24, e96: Array.from({ length: 96 }, (_, i) => +Math.pow(10, i / 96).toPrecision(3)) };
+const near = r => { const d = Math.pow(10, Math.floor(Math.log10(r))); let b = null; for (const m of [...ES[$("eser").value].map(x => x * d), 10 * d]) if (b === null || Math.abs(Math.log(m / r)) < Math.abs(Math.log(b / r))) b = m; return b; };
+const pos = id => { const v = val(id); return v > 0 ? v * 1e3 : NaN; };
+
+function solve() {
+  const m = $("mode").value, vin = val("vin"), rate = val("rate") / 1e3, t = (val("tol") || 0) / 100, tg = val("tgt"), R = ["r1", "r2", "r3", "r4"].map(pos), it = [], W = [], rows = [];
+  if (!(vin > 0) || !(R[0] > 0) || !(R[1] > 0)) return null;
+  let out;
+  if (m === "div") {
+    const [r1, r2, rl] = R, hasL = rl > 0, vf = (a, b, c) => { const rb = c > 0 ? b * c / (b + c) : b; return vin * rb / (a + rb); };
+    const rbot = hasL ? r2 * rl / (r2 + rl) : r2;
+    const vo0 = vf(r1, r2, NaN), vo = vf(r1, r2, rl), i1 = (vin - vo) / r1, rth = r1 * r2 / (r1 + r2), err = (vo - vo0) / vo0 * 100;
+    const vs = [-1, 1].map(s => vf(r1 * (1 + s * t), r2 * (1 - s * t), rl * (1 - s * t)));
+    it.push(["R1", r1, vin - vo, i1], ["R2", r2, vo, vo / r2]); if (hasL) it.push(["RL", rl, vo, vo / rl]);
+    out = { big: ["Vout" + (hasL ? " (loaded)" : ""), fmt(vo, 3) + " V"], l2: "Ratio Vout / Vin", b2: fmt(vo / vin, 4), l3: "Supply current", b3: fi(i1) };
+    rows.push(["Unloaded Vout", fmt(vo0, 3) + " V"], ["Loading error", hasL ? fmt(err, 2) + " %" : "no load"], ["Input resistance Rin", fr(r1 + rbot)], ["Thévenin Vth / Rth", fmt(vo0, 3) + " V / " + fr(rth)], ["Vout over tolerance", t > 0 ? fmt(Math.min(...vs), 3) + " – " + fmt(Math.max(...vs), 3) + " V" : "nominal (0% tol)"]);
+    if (tg > 0 && tg < vin) {
+      const rbReq = r1 * tg / (vin - tg), x1 = rbot * (vin - tg) / tg, s1 = near(x1), v1 = vf(s1, r2, rl);
+      if (hasL && rl <= rbReq) {
+        rows.push(["R2 for target" + (hasL ? " (loaded)" : ""), "unreachable with this RL"]);
+      } else {
+        const x2 = hasL ? rbReq * rl / (rl - rbReq) : rbReq, s2 = near(x2), v2 = vf(r1, s2, rl);
+        rows.push(["R2 for target (exact / standard)", fr(x2) + " / " + fr(s2)], ["Vout with standard R2", fmt(v2, 3) + " V (" + fmt((v2 - tg) / tg * 100, 2) + " %)"]);
+      }
+      rows.push(["R1 for target (exact / standard)", fr(x1) + " / " + fr(s1)], ["Vout with standard R1", fmt(v1, 3) + " V (" + fmt((v1 - tg) / tg * 100, 2) + " %)"]);
+    } else if (tg >= vin) W.push("Target Vout must be below Vin.");
+    if (hasL && Math.abs(err) > 1) W.push(`The load pulls Vout ${fmt(Math.abs(err), 1)}% off its unloaded value. Keep RL at least 10 × R2, or buffer with an op-amp follower.`);
+  } else {
+    const a = R.filter(x => x > 0);
+    if (m === "ser") {
+      const req = a.reduce((s, x) => s + x, 0), i = vin / req; a.forEach((r, n) => it.push(["R" + (n + 1), r, i * r, i]));
+      out = { big: ["Equivalent resistance", fr(req)], l2: "Total current", b2: fi(i), l3: "Total power", b3: fp(vin * i) };
+      rows.push(["Resistors in series", a.length], ["Req nearest standard", fr(near(req))], ["Drop across each, relative", a.map(r => fmt(r / req * 100, 1) + "%").join(" / ")]);
+    } else {
+      const g = a.reduce((s, x) => s + 1 / x, 0), req = 1 / g; a.forEach((r, n) => it.push(["R" + (n + 1), r, vin, vin / r]));
+      out = { big: ["Equivalent resistance", fr(req)], l2: "Total current", b2: fi(vin * g), l3: "Total power", b3: fp(vin * vin * g) };
+      rows.push(["Resistors in parallel", a.length], ["Req nearest standard", fr(near(req))], ["Current share of each", a.map(r => fmt(req / r * 100, 1) + "%").join(" / ")]);
+    }
+  }
+  let pmax = 0;
+  it.forEach(x => { const p = x[2] * x[3]; pmax = Math.max(pmax, p); x.push(p, p > rate); if (p > rate) W.push(`${x[0]} dissipates ${fp(p)}, above the ${fp(rate)} rating.`); });
+  if (pmax > 0 && rate > 0) rows.push(["Peak dissipation / rating", `${fp(pmax)} / ${fp(rate)} (${fmt(rate / pmax, 1)}×)`]);
+  return { m, vin, it, W, rows, out, a: R };
+}
+
+function draw(s) {
+  const { m, it, vin } = s, hasL = m === "div" && it.length > 2, T = (x, y) => `<text x="${x}" y="${y}">Vin ${fmt(vin, 2)}V</text>`;
+  let h = "";
+  if (m === "div") {
+    h = dot(60, 20) + T(60, 12) + wire("M60 20V40M60 80V120M60 160V176") + gnd(60, 176) + res(60, 60, 90, "R1 " + fr(it[0][1]), 80, 64, 1) + res(60, 140, 90, "R2 " + fr(it[1][1]), 80, 144, 1) + `<path class="w out" d="M60 100H250"/>` + dot(60, 100) + dot(250, 100) + `<text x="250" y="90">Vout</text>`;
+    if (hasL) h += dot(170, 100) + wire("M170 100V120M170 160V176") + gnd(170, 176) + res(170, 140, 90, "RL " + fr(it[2][1]), 190, 144, 1);
+  } else if (m === "ser") {
+    const n = it.length, y = 96;
+    h = dot(18, y) + `<text x="24" y="${y - 9}">Vin ${fmt(vin, 2)}V</text>` + wire(`M18 ${y}H40`);
+    it.forEach((x, i) => { const cx = 60 + i * 62; h += res(cx, y, 0, x[0] + " " + fr(x[1]), cx, y - 16) + (i < n - 1 ? wire(`M${cx + 20} ${y}H${cx + 42}`) : ""); });
+    const gx = 60 + (n - 1) * 62 + 38;
+    h += wire(`M${gx - 18} ${y}H${gx}V${y + 22}`) + gnd(gx, y + 22);
+  } else {
+    const n = it.length;
+    h = dot(18, 30) + `<text x="24" y="21">Vin ${fmt(vin, 2)}V</text>` + wire(`M18 30H${60 + (n - 1) * 62}M18 170H${60 + (n - 1) * 62}M18 170V176`) + gnd(18, 176);
+    it.forEach((x, i) => { const cx = 60 + i * 62; h += wire(`M${cx} 30V80M${cx} 120V170`) + res(cx, 100, 90, x[0] + " " + fr(x[1]), cx + 12, 104, 1) + dot(cx, 30) + dot(cx, 170); });
+  }
+  $("sch").innerHTML = h;
+}
+
+function setMode() {
+  const m = $("mode").value, d = m === "div";
+  const set = (id, v) => { $(id).value = v; };
+  set("r1", d ? 10 : 1); set("r2", d ? 3.3 : 2.2); set("r3", d ? "" : 3.3); set("r4", "");
+  $("l1").textContent = d ? "R1 top (kΩ)" : "R1 (kΩ)"; $("lr2").textContent = d ? "R2 bottom (kΩ)" : "R2 (kΩ)";
+  $("lr3").textContent = d ? "Load RL (kΩ, optional)" : "R3 (kΩ, optional)";
+  $("L4").hidden = d; $("Lt").hidden = $("Lg").hidden = !d;
+  $("r1").previousElementSibling.dataset.tip = d ? "Top divider resistor, from Vin to the output node." : "First resistor in the network.";
+  $("r2").previousElementSibling.dataset.tip = d ? "Bottom divider resistor, from the output node to ground." : "Second resistor in the network.";
+  $("r3").previousElementSibling.dataset.tip = d ? "Optional load resistance from the output to ground. Leave blank for no load." : "Optional third resistor. Leave blank to leave it out.";
+  update();
+}
+function update() {
+  const s = solve();
+  if (!s) { $("gwarn").innerHTML = '<div class="pw">Enter a positive Vin, R1 and R2.</div>'; return; }
+  const o = s.out;
+  $("bl").textContent = o.big[0]; $("bv").textContent = o.big[1]; $("l2").textContent = o.l2; $("b2").textContent = o.b2; $("l3").textContent = o.l3; $("b3").textContent = o.b3;
+  $("per").innerHTML = s.it.map(x => `<tr><td>${x[0]}</td><td>${fr(x[1])}</td><td>${fmt(x[2], 3)} V</td><td>${fi(x[3])}</td><td${x[5] ? ' class="ov"' : ""}>${fp(x[4])}</td></tr>`).join("");
+  $("res").innerHTML = s.rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+  $("gwarn").innerHTML = s.W.length ? s.W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No warnings.</div>';
+  draw(s);
+}
+$("mode").addEventListener("change", setMode); $("eser").addEventListener("change", update);
+document.querySelectorAll("main input").forEach(el => el.addEventListener("input", update));
+clampInputs("main input[type=number]", update);
+initTips({
+  mode: "A loaded voltage divider, a series string of up to four resistors, or a parallel bank of up to four.",
+  vin: "Source voltage across the whole network.",
+  r1: "Top divider resistor, from Vin to the output node.",
+  r2: "Bottom divider resistor, from the output node to ground.",
+  r3: "", r4: "Optional fourth resistor. Leave blank to leave it out.",
+  tol: "Resistor tolerance, used for the worst-case Vout range.",
+  tgt: "Output voltage you are aiming for. The page then suggests resistor values from the chosen standard series.",
+  rate: "Power rating of each resistor. Anything dissipating more than this is flagged.",
+  eser: "Series used to pick the nearest standard value: E12 (10%), E24 (5%) or E96 (1%)."
+});
+setMode();
+</script>
+</body>
+</html>
