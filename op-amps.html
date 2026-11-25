@@ -20,10 +20,10 @@ svg .tk{font-size:9px;fill:var(--mute)}
 .dot{fill:var(--ink)}
 .tri{fill:var(--ifill);stroke:var(--edge);stroke-width:2;stroke-linejoin:round}
 .gl{stroke:var(--grid);stroke-width:1}
-.eq{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);font-size:13.5px;line-height:1.45}
-.eq small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600;margin-bottom:3px}
-.eq div{color:var(--ink);font-weight:600}
-.eq div+div{color:var(--mute);font-weight:500;margin-top:2px}
+.eq{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--belt);border-radius:6px;background:var(--paper)}
+.eq small{display:block;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:6px}
+.eq .eq1{font-size:18px;line-height:1.4;color:var(--ink);font-weight:700;letter-spacing:.01em}
+.eq .eq2{font-size:15px;line-height:1.45;color:var(--mute);font-weight:500;margin-top:6px}
 </style>
 </head>
 <body>
@@ -98,7 +98,7 @@ const amp = (g, ng, vin, rows) => {
 
 const CK = {
   inv: { s: [R("Rin (kΩ)", 10, "Input resistor from Vin to the inverting input. It sets the input impedance."), R("Rf (kΩ)", 100, "Feedback resistor from the output to the inverting input."), V("Vin (V)", 0.1)],
-    eq: ["Vout = −(Rf / Rin) · Vin", "f₋₃dB = GBW / (1 + Rf / Rin),   Zin = Rin"],
+    eq: ["Vout = −(Rf / Rin) · Vin", "f₋₃dB = GBW / (1 + Rf / Rin)   ·   Zin = Rin"],
     f: p => amp(-p[1] / p[0], 1 + p[1] / p[0], p[2], [["Input impedance", fr(p[0] * 1e3)]]),
     d: p => node(12, 70, "Vin") + wire("M12 70H50M90 70H150") + comp("r", 70, 70, 0, "Rin " + k(p[0]), 70, 56) + FB("r", "Rf " + k(p[1])) + PG },
   non: { s: [R("Rf (kΩ)", 100, "Feedback resistor from the output to the inverting input."), R("Rg (kΩ)", 10, "Resistor from the inverting input to ground."), V("Vin (V)", 0.1)],
@@ -106,7 +106,7 @@ const CK = {
     f: p => amp(1 + p[0] / p[1], 1 + p[0] / p[1], p[2], [["Input impedance", "very high (ideal)"]]),
     d: p => node(12, 130, "Vin") + wire("M12 130H150M50 70H30M90 70H150") + gnd(30, 70) + comp("r", 70, 70, 0, "Rg " + k(p[1]), 70, 56) + FB("r", "Rf " + k(p[0])) },
   fol: { s: [V("Vin (V)", 1)],
-    eq: ["Vout = Vin   (G = 1 V/V)", "f₋₃dB = GBW"],
+    eq: ["Vout = Vin   (G = 1.00 V/V)", "f₋₃dB = GBW"],
     f: p => amp(1, 1, p[0], [["Input impedance", "very high (ideal)"], ["Output impedance", "very low (ideal)"]]),
     d: p => node(12, 130, "Vin") + wire("M12 130H150M264 100V28H120V70H150") + dot(264, 100) },
   sum: { s: [V("V1 (V)", 1), V("V2 (V)", 2), R("R1 (kΩ)", 10, "Input resistor for V1."), R("R2 (kΩ)", 20, "Input resistor for V2."), R("Rf (kΩ)", 10, "Feedback resistor.")],
@@ -114,7 +114,7 @@ const CK = {
     f: p => { const a = amp(-p[4] / p[2], 1 + p[4] * (1 / p[2] + 1 / p[3]), 0, [["Gain from V1 / V2", fmt(-p[4] / p[2], 2) + " / " + fmt(-p[4] / p[3], 2)]]); a.vo = -p[4] * (p[0] / p[2] + p[1] / p[3]); a.big = ["Output Vout", fmt(a.vo, 3) + " V"]; return a; },
     d: p => node(12, 70, "V1") + node(12, 36, "V2") + wire("M12 70H50M90 70H150M12 36H50M90 36H120M120 36V70") + dot(120, 36) + comp("r", 70, 70, 0, "R1 " + k(p[2]), 70, 56) + comp("r", 70, 36, 0, "R2 " + k(p[3]), 70, 22) + FB("r", "Rf " + k(p[4])) + PG },
   dif: { s: [V("V1 (V)", 1, "Voltage on the inverting side."), V("V2 (V)", 2, "Voltage on the non-inverting side."), R("R1 (kΩ)", 10, "Input resistor; the non-inverting side uses the same value."), R("Rf (kΩ)", 100, "Feedback resistor; the resistor to ground uses the same value.")],
-    eq: ["Vout = (Rf / R1) · (V2 − V1)   (matched pairs)", "f₋₃dB = GBW / (1 + Rf / R1)"],
+    eq: ["Vout = (Rf / R1) · (V2 − V1)", "f₋₃dB = GBW / (1 + Rf / R1)   (matched pairs)"],
     f: p => { const a = amp(p[3] / p[2], 1 + p[3] / p[2], 0, [["Input impedance V1 / V2", fr(p[2] * 1e3) + " / " + fr((p[2] + p[3]) * 1e3)], ["CMRR", "set by resistor matching"]]); a.vo = p[3] / p[2] * (p[1] - p[0]); return a; },
     d: p => node(12, 70, "V1") + node(12, 130, "V2") + wire("M12 70H50M90 70H150M12 130H50M90 130H150M120 130V140") + dot(120, 130) + comp("r", 70, 70, 0, "R1 " + k(p[2]), 70, 56) + comp("r", 70, 130, 0, "R1 " + k(p[2]), 70, 116) + comp("r", 120, 160, 90, "Rf " + k(p[3]), 132, 163, 1) + gnd(120, 180) + FB("r", "Rf " + k(p[3])) },
   int: { s: [R("R (kΩ)", 10, "Input resistor."), C("C (nF)", 100, "Feedback capacitor."), V("Vin (V)", 0.5, "DC input; the output ramps at −Vin/RC.")],
@@ -123,17 +123,17 @@ const CK = {
       return { big: ["Output slope", fmt(sl / 1e3, 3) + " V/ms"], vo: null, ol: "Time to reach a rail", out: sl ? fmt(val("vs") / Math.abs(sl) * 1e3, 2) + " ms" : "never", bwl: "Unity-gain frequency", bw: fh(fu), fc: [fu, "f₀"], mag: f => fu / f, rows: [["Time constant RC", fmt(rc * 1e3, 3) + " ms"]], note: "An ideal integrator drifts to a rail. Add a large resistor across C for DC stability." }; },
     d: p => node(12, 70, "Vin") + wire("M12 70H50M90 70H150") + comp("r", 70, 70, 0, "R " + k(p[0]), 70, 56) + FB("c", "C " + nF(p[1])) + PG },
   dsc: { s: [R("R (kΩ)", 10, "Feedback resistor."), C("C (nF)", 10, "Input capacitor."), V("Vin peak (V)", 0.5, "Peak voltage of the sine input.", 0), F("Test f (Hz)", 1000)],
-    eq: ["Vout(t) = −R·C · dVin/dt,   |G(f)| = 2π·f·R·C", "f₀ = 1 / (2π·R·C)   (unity-gain frequency)"],
+    eq: ["Vout(t) = −R·C · dVin/dt   ·   |G(f)| = 2π·f·R·C", "f₀ = 1 / (2π·R·C)   (unity-gain frequency)"],
     f: p => { const rc = p[0] * p[1] * 1e-6, fu = 1 / (2 * Math.PI * rc), g = 2 * Math.PI * p[3] * rc;
       return { big: ["Gain at test f", fmt(g, 2) + " V/V"], vo: p[2] * g, ol: "Output peak", bwl: "Gain = 1 at", bw: fh(fu), fc: [fu, "f₀"], ft: p[3], mag: f => 2 * Math.PI * f * rc, rows: [["Phase", "inverted, 90° lead"]], note: "Gain rises with frequency, so noise is amplified. Add a small resistor in series with C." }; },
     d: p => node(12, 70, "Vin") + wire("M12 70H50M90 70H150") + comp("c", 70, 70, 0, "C " + nF(p[1]), 70, 56) + FB("r", "R " + k(p[0])) + PG },
   lpf: { s: [R("Rin (kΩ)", 10, "Input resistor; sets the DC gain with Rf."), R("Rf (kΩ)", 100, "Feedback resistor, in parallel with Cf."), C("Cf (nF)", 10, "Feedback capacitor; sets the cut-off with Rf."), V("Vin peak (V)", 0.1, "Peak voltage of the sine input.", 0), F("Test f (Hz)", 1000)],
-    eq: ["|H(f)| = (Rf / Rin) / √(1 + (f / fc)²)", "fc = 1 / (2π·Rf·Cf),   φ = −arctan(f / fc) + 180°"],
+    eq: ["|H(f)| = (Rf / Rin) / √(1 + (f / fc)²)", "fc = 1 / (2π·Rf·Cf)   ·   φ = −arctan(f / fc) + 180°"],
     f: p => { const fc = 1 / (2 * Math.PI * p[1] * 1e3 * p[2] * 1e-9), g0 = p[1] / p[0], m = f => g0 / Math.hypot(1, f / fc), mt = m(p[4]), fop = gbw() * 1e6 / (1 + g0);
       return { big: ["DC gain", fmt(-g0, 2) + " V/V"], vo: p[3] * mt, ol: "Output peak at test f", bwl: "Cut-off fc", bw: fh(fc), fc: [fc, "fc"], ft: p[4], warn: fc > fop ? `Cut-off fc (${fh(fc)}) exceeds the op-amp's closed-loop bandwidth (${fh(fop)}), so the op-amp rolls off earlier.` : "", mag: m, rows: [["Gain at test f", fmt(db(mt), 2) + " dB"], ["Phase at test f", fmt(-ang(p[4] / fc), 1) + "° (plus inversion)"]] }; },
     d: p => node(12, 70, "Vin") + wire("M12 70H50M90 70H150M165 28V3M205 28V3") + dot(165, 28) + dot(205, 28) + comp("r", 70, 70, 0, "Rin " + k(p[0]), 70, 56) + FB("r", "Rf " + k(p[1])) + comp("c", 185, 3, 0, "Cf " + nF(p[2]), 185, -7) + PG },
   hpf: { s: [R("Rin (kΩ)", 10, "Series resistor after the input capacitor."), C("Cin (nF)", 10, "Input capacitor; sets the cut-off with Rin."), R("Rf (kΩ)", 100, "Feedback resistor; sets the high-frequency gain with Rin."), V("Vin peak (V)", 0.1, "Peak voltage of the sine input.", 0), F("Test f (Hz)", 1000)],
-    eq: ["|H(f)| = (Rf / Rin) · (f / fc) / √(1 + (f / fc)²)", "fc = 1 / (2π·Rin·Cin),   φ = 90° − arctan(f / fc) + 180°"],
+    eq: ["|H(f)| = (Rf / Rin) · (f / fc) / √(1 + (f / fc)²)", "fc = 1 / (2π·Rin·Cin)   ·   φ = 90° − arctan(f / fc) + 180°"],
     f: p => { const fc = 1 / (2 * Math.PI * p[0] * 1e3 * p[1] * 1e-9), gh = p[2] / p[0], m = f => gh * (f / fc) / Math.hypot(1, f / fc), mt = m(p[4]), fop = gbw() * 1e6 / (1 + gh);
       return { big: ["High-frequency gain", fmt(-gh, 2) + " V/V"], vo: p[3] * mt, ol: "Output peak at test f", bwl: "Cut-off fc", bw: fh(fc), fc: [fc, "fc"], ft: p[4], warn: fc > fop ? `Cut-off fc (${fh(fc)}) exceeds the op-amp's closed-loop bandwidth (${fh(fop)}), so the passband is narrowed.` : "", mag: m, rows: [["Gain at test f", fmt(db(mt), 2) + " dB"], ["Phase at test f", fmt(90 - ang(p[4] / fc), 1) + "° (plus inversion)"]] }; },
     d: p => node(12, 70, "Vin") + wire("M12 70H30M110 70H150") + comp("c", 50, 70, 0, "Cin " + nF(p[1]), 50, 56) + comp("r", 90, 70, 0, "Rin " + k(p[0]), 90, 88) + FB("r", "Rf " + k(p[2])) + PG }
@@ -183,7 +183,7 @@ function update() {
   if (r.note) W.push(`<div class="pok">${r.note}</div>`);
   $("gwarn").innerHTML = W.length ? W.join("") : '<div class="pok">No warnings.</div>';
   $("res").innerHTML = r.rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
-  $("eq").innerHTML = `<small>Governing equations</small><div>${c.eq[0]}</div><div>${c.eq[1]}</div>`;
+  $("eq").innerHTML = `<small>Governing equations</small><div class="eq1">${c.eq[0]}</div><div class="eq2">${c.eq[1]}</div>`;
   $("sch").innerHTML = AMP(vs) + c.d(p);
   bode(r.mag, r.fc, r.ft);
 }
