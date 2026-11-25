@@ -117,14 +117,19 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 .ls{animation:ls 3s linear infinite alternate}
 .fb2{animation:fb2 6s linear infinite}
 .fb3{animation:fb3 6s linear infinite}
-.tile .spin,.tile .rk,.tile .rp,.tile .fol,.tile .ls,.tile .fb2,.tile .fb3{animation-play-state:paused}
-.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol,.tile:hover .ls,.tile:focus-visible .ls,.tile:hover .fb2,.tile:focus-visible .fb2,.tile:hover .fb3,.tile:focus-visible .fb3{animation-play-state:running}
+.pu{opacity:0}
+.fl{animation:fl 1.6s linear infinite}
+.tile .spin,.tile .rk,.tile .rp,.tile .fol,.tile .ls,.tile .fb2,.tile .fb3,.tile .fl{animation-play-state:paused}
+.tile:hover .spin,.tile:focus-visible .spin,.tile:hover .rk,.tile:focus-visible .rk,.tile:hover .rp,.tile:focus-visible .rp,.tile:hover .fol,.tile:focus-visible .fol,.tile:hover .ls,.tile:focus-visible .ls,.tile:hover .fb2,.tile:focus-visible .fb2,.tile:hover .fb3,.tile:focus-visible .fb3,.tile:hover .fl,.tile:focus-visible .fl{animation-play-state:running}
+.tile:hover .pu,.tile:focus-visible .pu{animation:pu 1.8s linear infinite}
 @keyframes cw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) + 360deg))}}
 @keyframes ccw{from{transform:rotate(var(--a0))}to{transform:rotate(calc(var(--a0) - 360deg))}}
 @keyframes ls{from{transform:translateX(-12px)}to{transform:translateX(12px)}}
 @keyframes rk{from{transform:translateX(6px)}to{transform:translateX(-6px)}}
+@keyframes fl{to{stroke-dashoffset:-8}}
+@keyframes pu{0%{transform:translateX(0);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateX(var(--d));opacity:0}}
 @keyframes rp{from{transform:rotate(61.35deg)}to{transform:rotate(118.65deg)}}
-@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol,.ls,.fb2,.fb3{animation:none}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
+@media (prefers-reduced-motion:reduce){.spin,.spinr,.rk,.rp,.fol,.ls,.fb2,.fb3,.fl,.pu{animation:none!important}.spin,.spinr{transform:rotate(var(--a0))}.rk{transform:translateX(6px)}.rp{transform:rotate(61.35deg)}.fol{transform:translateY(5.86px)}}
 @media (max-width:760px){.hero{margin-top:24px}#hero{justify-self:center;margin:12px 0 0;max-width:340px}}
 @media (max-width:520px){main{padding:10px}.plate{padding:22px 16px 18px}}
 </style>
@@ -149,6 +154,8 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <div class="tile soon" style="--c:#d6479b"><span class="fig">FIG. 05</span><svg class="ico" viewBox="0 0 64 64" data-icon="cam"></svg><h2>Cam and follower</h2><p>Motion profiles and pressure angle.</p><span class="go">Planned</span></div>
 <a class="tile" href="cantilever.html" style="--c:var(--cant)"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="cant"></svg><h2>Cantilever beam</h2><p>Bending stress, safety factor, tip deflection, and shear, moment and deflection graphs.</p><span class="go">Open →</span></a>
 <div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 07</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
+<a class="tile" href="op-amps.html" style="--c:#4fb3e8"><span class="fig">FIG. 08</span><svg class="ico" viewBox="0 0 64 64" data-icon="amp"></svg><h2>Op-amp circuits</h2><p>Inverting, summing, difference, integrator and filters, with gain, bandwidth and a Bode plot.</p><span class="go">Open →</span></a>
+<a class="tile" href="resistor-network.html" style="--c:#b8895a"><span class="fig">FIG. 09</span><svg class="ico" viewBox="0 0 64 64" data-icon="rnet"></svg><h2>Resistor networks</h2><p>Loaded dividers, series and parallel banks, Th&eacute;venin, tolerance and E-series values.</p><span class="go">Open →</span></a>
 </div>
 <footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
 </div>
@@ -265,13 +272,17 @@ const ICONS = {
   screw: () => {
     let d = "";
     for (let x = -26; x <= 82; x += 8) d += `M${x} 38L${x + 4} 26`; // extra length so both ends stay covered while the lines slide ±12
-    return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} stroke-width="1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
+    return `<defs><clipPath id="lsc"><rect x="6" y="26" width="52" height="12"/></clipPath></defs><rect x="6" y="26" width="52" height="12" ${line}/><g clip-path="url(#lsc)"><g class="ls"><path d="${d}" ${line} style="stroke-width:1.4"/></g></g><g class="ls"><rect x="24" y="18" width="14" height="28" fill="var(--panel)" ${line}/></g>`;
   },
-  four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="11" y2="0" ${line} stroke-width="3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
+  four: () => `<path d="M10 56l6-6 6 6zM42 56l6-6 6 6z" ${line}/><g transform="translate(16,50)"><g class="fb3"><line x1="0" y1="0" x2="26" y2="0" ${line}/><circle r="2" fill="var(--panel)" ${line}/><circle cx="26" r="2" fill="var(--panel)" ${line}/></g></g><g transform="translate(48,50)"><g class="fb2"><line x1="0" y1="0" x2="22" y2="0" ${line}/></g></g>` + spin(16, 50, 6, 0, `<line x1="0" y1="0" x2="11" y2="0" ${line} style="stroke-width:3"/>`) + `<circle cx="16" cy="50" r="2" fill="var(--panel)" ${line}/><circle cx="48" cy="50" r="2" fill="var(--panel)" ${line}/>`,
   // Eccentric cam (R 12, offset e 5) with a 3-radius roller follower. The follower keyframes come from the contact condition below.
   cam: () => `<g transform="translate(30,44)"><g class="spin" style="--a0:0deg;--t:6s"><circle cx="5" r="12" ${line}/><path d="M5 0H13" ${line}/><circle r="1.5" ${line}/></g></g><g class="fol"><path d="M30 24V4" ${line}/><circle cx="30" cy="24" r="3" ${line}/></g>`,
   // Cantilever: wall, dashed unloaded beam, then a beam and arrow that the controller below redraws each frame.
   cant: () => `<path d="M10 30H54" ${line} stroke-dasharray="2 3" opacity=".45"/><path d="M10 16V44M10 20L5 25M10 26L5 31M10 32L5 37M10 38L5 43" ${line}/><path class="cb" ${line}/><path class="ca" style="stroke-width:1.5" ${line}/>`,
+  // Op-amp: centred triangle with − and + inside, symmetric leads, and pulses aligned to the lead spans on hover.
+  amp: () => `<path d="M18 10V54L50 32Z" ${line}/><path d="M23 22H29M23 42H29M26 39V45" ${line} style="stroke-width:1.6"/><path d="M6 22H18M6 42H18M50 32H60" ${line}/><circle class="pu" style="--d:10px" cx="7" cy="22" r="2" fill="currentColor"/><circle class="pu" style="--d:10px;animation-delay:.3s" cx="7" cy="42" r="2" fill="currentColor"/><circle class="pu" style="--d:9px;animation-delay:.85s" cx="51" cy="32" r="2" fill="currentColor"/>`,
+  // Voltage divider: centred spine, symmetric 4-peak resistors, clear stems at the tap and ground, and a hover pulse on the tap wire.
+  rnet: () => `<circle cx="22" cy="6.5" r="2.5" ${line} style="stroke-width:1.6"/><path d="M22 9V12.5L16.5 14.375L27.5 18.125L16.5 21.875L27.5 25.625L22 27.5V36.5L16.5 38.375L27.5 42.125L16.5 45.875L27.5 49.625L22 51.5V55M14 55H30M17 58.2H27M20 61.4H24" ${line}/><path d="M22 32H49.5" ${line}/><circle cx="22" cy="32" r="2.4" fill="currentColor"/><circle cx="52" cy="32" r="2.5" ${line} style="stroke-width:1.6"/><circle class="pu" style="--d:25px" cx="24" cy="32" r="2" fill="currentColor"/>`,
   motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
 };
 {
