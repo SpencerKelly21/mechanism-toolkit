@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Resistor Network Solver</title>
-<meta name="description" content="Solve a loaded voltage divider, a series string or a parallel bank: equivalent resistance, currents, power, Thévenin equivalent, tolerance and standard E-series values.">
+<meta name="description" content="Solve a loaded voltage divider, a series string, a parallel bank or a custom node-to-node network: equivalent resistance, series/parallel logic check, currents, power, Thévenin equivalent, tolerance and standard E-series values.">
 <meta name="theme-color" content="#12304a">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%232E5C7A'/%3E%3Ctext x='32' y='42' font-family='sans-serif' font-size='28' font-weight='700' text-anchor='middle' fill='%23F6F4EF'%3ESK%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,14 +14,51 @@
 svg{display:block;width:100%;height:auto}
 svg text{font:600 11px "Barlow Semi Condensed",system-ui,sans-serif;fill:var(--label);text-anchor:middle}
 svg text.l{text-anchor:start}
+svg text.r{text-anchor:end}
+svg .sub{font-size:9.5px;fill:var(--mute)}
 .w{fill:none;stroke:var(--ink);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .out{stroke:var(--belt)}
 .dot{fill:var(--ink)}
+.nd{cursor:pointer}
+.nd circle.hit{fill:transparent}
+.nd circle.core{fill:var(--panel);stroke:var(--ink);stroke-width:1.8;transition:stroke .12s,fill .12s}
+.nd:hover circle.core,.nd.sel circle.core{stroke:var(--belt);stroke-width:2.4;fill:var(--ifill)}
+.nd.term circle.core{fill:var(--ink)}
+.nd.term.sel circle.core{fill:var(--belt);stroke:var(--belt)}
+.rgrp{cursor:pointer}
+.rgrp:hover .w{stroke:var(--belt)}
+.rgrp:hover text{fill:var(--belt)}
+.lbg{fill:var(--sheet);opacity:.9}
 .pr th{font-size:13px;color:var(--mute);font-weight:600;text-align:right;padding:4px}
 .pr td{text-align:right;padding:6px 4px;border-top:1px solid var(--line);font-weight:600}
-.pr th:first-child,.pr td:first-child{text-align:left}
-.pr td:first-child{color:var(--mute);font-weight:500}
+.pr th:first-child,.pr td:first-child,.pr th:nth-child(2),.pr td:nth-child(2){text-align:left}
+.pr td:first-child{color:var(--mute);font-weight:600}
+.pr td:nth-child(2){color:var(--mute);font-weight:500;font-size:13px}
 .pr td.ov{color:var(--bad)}
+.pr input.iv{width:74px;padding:3px 5px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px;text-align:right}
+.pr input.iv:focus{outline:2px solid var(--belt)}
+.bbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 8px}
+.bbar select,.bbar input{padding:5px 6px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font:inherit;font-size:14px}
+.bbar input{width:76px}
+.bbar .btn{padding:4px 10px;font-size:13.5px}
+.bbar .btn.sm{padding:4px 8px;font-size:12.5px;border-color:var(--line);color:var(--mute)}
+.bbar .btn.sm:hover{border-color:var(--ink);color:var(--ink)}
+.clist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.crow{display:grid;grid-template-columns:34px 1fr 78px 26px;gap:6px;align-items:center;padding:5px 7px;border:1px solid var(--line);border-radius:5px;background:var(--paper);font-size:14px}
+.crow b{color:var(--ink);font-weight:700}
+.crow span{color:var(--mute);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crow input{width:100%;padding:3px 5px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);font:inherit;font-size:14px;text-align:right}
+.crow input:focus{outline:2px solid var(--belt)}
+.crow button{border:0;background:none;color:var(--mute);font:700 16px/1 inherit;cursor:pointer;padding:2px}
+.crow button:hover{color:var(--bad)}
+.steps{margin-top:10px;padding:9px 11px;border:1px solid var(--line);border-radius:6px;background:var(--paper);font-size:13.5px}
+.steps small{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);font-weight:700;margin-bottom:4px}
+.steps ol{margin:0;padding-left:18px;color:var(--ink)}
+.steps li{margin:2px 0}
+@media (max-width:520px){
+.pr input.iv{width:62px;font-size:13px}
+.crow{grid-template-columns:30px 1fr 68px 24px;gap:4px}
+}
 </style>
 </head>
 <body>
@@ -33,9 +70,9 @@ svg text.l{text-anchor:start}
 
 <div class="layout">
 <div>
-<div class="sheet"><svg id="sch" viewBox="0 0 320 210" role="img" aria-label="Resistor network schematic"></svg></div>
-<div class="card" style="margin-top:12px"><h2>Per resistor</h2><table class="pr"><thead><tr><th>Resistor</th><th>R</th><th>Voltage</th><th>Current</th><th>Power</th></tr></thead><tbody id="per"></tbody></table></div>
-<p class="note">Ideal source and resistors. Blank optional fields are treated as not fitted. The orange wire is the output node.</p>
+<div class="sheet"><svg id="sch" viewBox="0 0 340 220" role="img" aria-label="Resistor network schematic"></svg></div>
+<p class="note" id="snot">Ideal source and resistors. Click any resistor on the drawing to edit its value directly.</p>
+<div class="card" style="margin-top:12px"><h2>Per resistor</h2><table class="pr"><thead><tr><th>Part</th><th id="thn">Nodes</th><th>R (kΩ)</th><th>Voltage</th><th>Current</th><th>Power</th></tr></thead><tbody id="per"></tbody></table></div>
 </div>
 <div class="card">
 <div class="read">
@@ -44,18 +81,39 @@ svg text.l{text-anchor:start}
 <div><small id="l3">Supply current</small><b id="b3">–</b></div>
 </div>
 <div class="pgrid g2">
-<label>Network<select id="mode"><option value="div">Voltage divider (with load)</option><option value="ser">Series string</option><option value="par">Parallel bank</option></select></label>
+<label>Network<select id="mode"><option value="div">Voltage divider (with load)</option><option value="ser">Series string</option><option value="par">Parallel bank</option><option value="cus">Custom network (place &amp; reduce)</option></select></label>
 <label>Vin (V)<input type="number" id="vin" value="12" step="any" min="0.001" max="10000"></label>
-<label><span id="l1">R1 (kΩ)</span><input type="number" id="r1" value="10" step="any" min="0.001" max="1e6"></label>
-<label><span id="lr2">R2 (kΩ)</span><input type="number" id="r2" value="3.3" step="any" min="0.001" max="1e6"></label>
-<label><span id="lr3">Load RL (kΩ, optional)</span><input type="number" id="r3" step="any" min="0.001" max="1e6"></label>
+<label id="L1"><span id="l1">R1 (kΩ)</span><input type="number" id="r1" value="10" step="any" min="0.001" max="1e6"></label>
+<label id="L2"><span id="lr2">R2 (kΩ)</span><input type="number" id="r2" value="3.3" step="any" min="0.001" max="1e6"></label>
+<label id="L3"><span id="lr3">Load RL (kΩ, optional)</span><input type="number" id="r3" step="any" min="0.001" max="1e6"></label>
 <label id="L4" hidden><span>R4 (kΩ, optional)</span><input type="number" id="r4" step="any" min="0.001" max="1e6"></label>
 <label id="Lt"><span>Tolerance (%)</span><input type="number" id="tol" value="1" step="any" min="0" max="20"></label>
 <label id="Lg"><span>Target Vout (V, optional)</span><input type="number" id="tgt" step="any" min="0"></label>
 <label>Power rating (mW)<input type="number" id="rate" value="250" step="any" min="1" max="1e6"></label>
 <label>Standard series<select id="eser"><option value="e24">E24</option><option value="e12">E12</option><option value="e96">E96</option></select></label>
 </div>
+
+<div id="cbox" hidden>
+<div class="bbar">
+<select id="nfrom" aria-label="From node"></select>
+<span>→</span>
+<select id="nto" aria-label="To node"></select>
+<input type="number" id="nrval" value="4.7" step="any" min="0.001" max="1e6" aria-label="New resistor value in kilo-ohms">
+<button type="button" class="btn" id="badd">+ Resistor</button>
+<button type="button" class="btn sm" id="bnd">+ Node</button>
+<button type="button" class="btn sm" id="brmnd">− Node</button>
+</div>
+<div class="bbar" style="margin-top:4px">
+<span style="font-size:12.5px;color:var(--mute)">Presets:</span>
+<button type="button" class="btn sm" data-pre="sp">Series-parallel</button>
+<button type="button" class="btn sm" data-pre="div">Divider + load</button>
+<button type="button" class="btn sm" data-pre="br">Bridge (logic check)</button>
+</div>
+<div class="clist" id="clist"></div>
+</div>
+
 <div id="gwarn"></div>
+<div class="steps" id="steps" hidden></div>
 <table class="res"><tbody id="res"></tbody></table>
 </div>
 </div>
@@ -64,19 +122,20 @@ svg text.l{text-anchor:start}
 <li>Divider: Vout = Vin·R2/(R1 + R2). With a load, R2 is replaced by R2‖RL = R2·RL/(R2 + RL), so Vout = Vin·(R2‖RL)/(R1 + R2‖RL).</li>
 <li>Thévenin equivalent seen by the load: Vth = Vin·R2/(R1 + R2), Rth = R1‖R2. The loaded output is Vth·RL/(Rth + RL).</li>
 <li>Series: Req = ΣR, I = Vin/Req, each drop V = I·R. Parallel: 1/Req = Σ(1/R), each branch current I = Vin/R.</li>
+<li>Series–parallel reduction: parallel branches between the same two nodes merge via 1/Rpar = Σ(1/R); internal nodes with exactly two incident branches merge in series via Rser = R1 + R2. Networks with irreducible meshes (such as an unbalanced Wheatstone bridge) fail the pure series–parallel check.</li>
 <li>Power in each resistor: P = V·I = I²R = V²/R. Compare against the rating; leave a margin of at least 2×.</li>
 <li>Tolerance: worst-case Vout comes from R1 high with R2 (and RL) low, and the reverse, each by ±tolerance.</li>
-<li>Target Vout: Rbot = R1·Vt/(Vin − Vt) (or R1 = Rbot·(Vin − Vt)/Vt), where Rbot is R2 unloaded or R2‖RL when a load is fitted, then the nearest value in the chosen series. E12 and E24 are the standard lists; E96 is computed as 10^(n/96) rounded to three digits.</li>
-<li>Loading rule of thumb: keep RL at least 10 × R2 to hold the error near 10%, 100 × R2 for about 1%, or buffer the tap with an op-amp follower.</li>
+<li>Target Vout: Rbot = R1·Vt/(Vin − Vt) (or R1 = Rbot·(Vin − Vt)/Vt), where Rbot is R2 unloaded or R2‖RL when a load is fitted, then the nearest value in the chosen series.</li>
 </ul></details>
 </main>
 
 <script src="shared/ui.js"></script>
 <script>
-const wire = d => `<path class="w" d="${d}"/>`, dot = (x, y) => `<circle class="dot" cx="${x}" cy="${y}" r="2.6"/>`;
+const wire = (d, cls = "w") => `<path class="${cls}" d="${d}"/>`;
+const dot = (x, y) => `<circle class="dot" cx="${x}" cy="${y}" r="2.6"/>`;
 const gnd = (x, y) => wire(`M${x} ${y}V${y + 5}M${x - 8} ${y + 5}H${x + 8}M${x - 5} ${y + 9}H${x + 5}M${x - 2} ${y + 13}H${x + 2}`);
-const lab = (x, y, t, a) => `<text${a ? ' class="l"' : ""} x="${x}" y="${y}">${t}</text>`;
-const res = (x, y, rot, t, lx, ly, a) => `<g transform="translate(${x},${y}) rotate(${rot})"><path class="w" d="M-20 0H-12L-9 -5L-3 5L3 -5L9 5L12 0H20"/></g>${lab(lx, ly, t, a)}`;
+const lab = (x, y, t, cls = "") => `<text${cls ? ` class="${cls}"` : ""} x="${x}" y="${y}">${t}</text>`;
+const res = (x, y, rot, t, lx, ly, cls = "", id = "") => `<g${id ? ` class="rgrp" data-focus="${id}"` : ""} transform="translate(${x},${y}) rotate(${rot})"><path class="w" d="M-20 0H-12L-9 -5L-3 5L3 -5L9 5L12 0H20"/></g>${lab(lx, ly, t, cls)}`;
 
 const fr = o => o >= 1e6 ? fmt(o / 1e6, 3).replace(/\.?0+$/, "") + " MΩ" : o >= 1e3 ? fmt(o / 1e3, 3).replace(/\.?0+$/, "") + " kΩ" : fmt(o, 1).replace(/\.0$/, "") + " Ω";
 const fi = a => Math.abs(a) >= 1 ? fmt(a, 3) + " A" : Math.abs(a) >= 1e-3 ? fmt(a * 1e3, 3) + " mA" : fmt(a * 1e6, 1) + " µA";
@@ -86,22 +145,223 @@ const ES = { e12: E24.filter((_, i) => i % 2 === 0), e24: E24, e96: Array.from({
 const near = r => { const d = Math.pow(10, Math.floor(Math.log10(r))); let b = null; for (const m of [...ES[$("eser").value].map(x => x * d), 10 * d]) if (b === null || Math.abs(Math.log(m / r)) < Math.abs(Math.log(b / r))) b = m; return b; };
 const pos = id => { const v = val(id); return v > 0 ? v * 1e3 : NaN; };
 
+// Custom interactive network state: terminals Vin and GND plus intermediate nodes N1..Nn.
+let cNodes = ["Vin", "N1", "N2", "GND"];
+let cEdges = [
+  { id: "R1", u: "Vin", v: "N1", k: 10 },
+  { id: "R2", u: "N1", v: "GND", k: 10 },
+  { id: "R3", u: "N1", v: "N2", k: 4.7 },
+  { id: "R4", u: "N2", v: "GND", k: 4.7 },
+  { id: "R5", u: "N2", v: "GND", k: 4.7 }
+];
+let selNode = null;
+
+function nextEdgeId() {
+  const used = new Set(cEdges.map(e => e.id));
+  for (let i = 1; ; i++) if (!used.has("R" + i)) return "R" + i;
+}
+
+function loadPreset(name) {
+  selNode = null;
+  if (name === "div") {
+    cNodes = ["Vin", "N1", "GND"];
+    cEdges = [
+      { id: "R1", u: "Vin", v: "N1", k: 10 },
+      { id: "R2", u: "N1", v: "GND", k: 3.3 },
+      { id: "R3", u: "N1", v: "GND", k: 33 }
+    ];
+  } else if (name === "br") {
+    cNodes = ["Vin", "N1", "N2", "GND"];
+    cEdges = [
+      { id: "R1", u: "Vin", v: "N1", k: 10 },
+      { id: "R2", u: "Vin", v: "N2", k: 10 },
+      { id: "R3", u: "N1", v: "N2", k: 4.7 },
+      { id: "R4", u: "N1", v: "GND", k: 10 },
+      { id: "R5", u: "N2", v: "GND", k: 22 }
+    ];
+  } else {
+    cNodes = ["Vin", "N1", "N2", "GND"];
+    cEdges = [
+      { id: "R1", u: "Vin", v: "N1", k: 10 },
+      { id: "R2", u: "N1", v: "GND", k: 10 },
+      { id: "R3", u: "N1", v: "N2", k: 4.7 },
+      { id: "R4", u: "N2", v: "GND", k: 4.7 },
+      { id: "R5", u: "N2", v: "GND", k: 4.7 }
+    ];
+  }
+  syncCustomControls();
+  update();
+}
+
+function syncCustomControls() {
+  const opts = cNodes.map(n => `<option value="${n}">${n}</option>`).join("");
+  const f = $("nfrom").value, t = $("nto").value;
+  $("nfrom").innerHTML = opts; $("nto").innerHTML = opts;
+  $("nfrom").value = cNodes.includes(f) ? f : "Vin";
+  $("nto").value = cNodes.includes(t) && t !== $("nfrom").value ? t : (cNodes.find(n => n !== $("nfrom").value) || "GND");
+  $("brmnd").disabled = cNodes.length <= 2;
+  $("clist").innerHTML = cEdges.map((e, idx) =>
+    `<div class="crow"><b>${e.id}</b><span>${e.u} ↔ ${e.v}</span><input type="number" id="ce_${e.id}" data-idx="${idx}" value="${e.k}" step="any" min="0.001" max="1e6" aria-label="${e.id} in kΩ"><button type="button" data-del="${idx}" aria-label="Remove ${e.id}">×</button></div>`
+  ).join("");
+}
+
+// Series-parallel logic check & iterative reduction between Vin and GND.
+function reduceCustom(vin) {
+  if (!cEdges.length) return { ok: false, msg: "Place at least one resistor between Vin and GND." };
+  for (const e of cEdges) {
+    if (!(e.k > 0)) return { ok: false, msg: `${e.id} must have a positive resistance.` };
+    if (e.u === e.v) return { ok: false, msg: `Logic check failed: ${e.id} has both ends on ${e.u} (self-loop).` };
+  }
+  // Connectivity check from Vin to GND
+  const adj = {};
+  cNodes.forEach(n => { adj[n] = []; });
+  cEdges.forEach(e => { adj[e.u].push(e.v); adj[e.v].push(e.u); });
+  const seen = new Set(["Vin"]), q = ["Vin"];
+  while (q.length) {
+    const u = q.shift();
+    for (const v of (adj[u] || [])) if (!seen.has(v)) { seen.add(v); q.push(v); }
+  }
+  if (!seen.has("GND")) return { ok: false, msg: "Logic check failed: no complete path connects Vin to GND." };
+  const floating = cEdges.filter(e => !seen.has(e.u) || !seen.has(e.v));
+  if (floating.length) return { ok: false, msg: `Logic check failed: ${floating.map(e => e.id).join(", ")} not connected to the Vin–GND circuit.` };
+
+  // Check for dead-end internal nodes (degree 1)
+  for (const n of cNodes) {
+    if (n !== "Vin" && n !== "GND" && (adj[n] || []).length === 1) {
+      const spur = cEdges.find(e => e.u === n || e.v === n);
+      return { ok: false, msg: `Logic check failed: node ${n} has only one connection (${spur.id} is an open spur, neither in series nor in parallel).` };
+    }
+  }
+
+  let blocks = cEdges.map(e => ({ label: e.id, u: e.u, v: e.v, r: e.k * 1e3, kind: "leaf", edge: e }));
+  const steps = [];
+
+  while (true) {
+    // 1. Parallel reduction: merge multiple blocks sharing the same unordered endpoint pair
+    const groups = new Map();
+    for (const b of blocks) {
+      const key = b.u < b.v ? `${b.u}|${b.v}` : `${b.v}|${b.u}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(b);
+    }
+    let merged = false;
+    for (const grp of groups.values()) {
+      if (grp.length >= 2) {
+        const rPar = 1 / grp.reduce((s, b) => s + 1 / b.r, 0);
+        const lbl = grp.length <= 3 ? `(${grp.map(b => b.label).join(" ‖ ")})` : `R_par(${grp.length})`;
+        steps.push(`Parallel (${grp[0].u} ↔ ${grp[0].v}): ${grp.map(b => b.label).join(" ‖ ")} = ${fr(rPar)}`);
+        const set = new Set(grp);
+        blocks = blocks.filter(b => !set.has(b));
+        blocks.push({ label: lbl, u: grp[0].u, v: grp[0].v, r: rPar, kind: "par", children: grp });
+        merged = true;
+        break;
+      }
+    }
+    if (merged) continue;
+
+    // 2. Series reduction: merge internal node with degree exactly 2
+    const deg = {};
+    for (const b of blocks) { deg[b.u] = (deg[b.u] || 0) + 1; deg[b.v] = (deg[b.v] || 0) + 1; }
+    const mid = Object.keys(deg).find(n => n !== "Vin" && n !== "GND" && deg[n] === 2);
+    if (mid) {
+      const inc = blocks.filter(b => b.u === mid || b.v === mid);
+      const [b1, b2] = inc;
+      const n1 = b1.u === mid ? b1.v : b1.u;
+      const n2 = b2.u === mid ? b2.v : b2.u;
+      const rSer = b1.r + b2.r;
+      const lbl = `(${b1.label} + ${b2.label})`;
+      steps.push(`Series (via ${mid}): ${b1.label} + ${b2.label} = ${fr(rSer)}`);
+      blocks = blocks.filter(b => b !== b1 && b !== b2);
+      blocks.push({ label: lbl, u: n1, v: n2, r: rSer, kind: "ser", children: [b1, b2] });
+      continue;
+    }
+    break;
+  }
+
+  if (blocks.length === 1 && ((blocks[0].u === "Vin" && blocks[0].v === "GND") || (blocks[0].u === "GND" && blocks[0].v === "Vin"))) {
+    const root = blocks[0];
+    const req = root.r, itot = vin / req;
+    const solved = new Map();
+    const walk = (b, v, i) => {
+      if (b.kind === "leaf") { solved.set(b.edge.id, { v, i, p: v * i }); return; }
+      if (b.kind === "par") b.children.forEach(c => walk(c, v, v / c.r));
+      else b.children.forEach(c => walk(c, i * c.r, i));
+    };
+    walk(root, vin, itot);
+
+    // Solve node voltages from GND = 0 V and Vin = vin
+    const nv = { GND: 0, Vin: vin };
+    let prog = true;
+    while (prog) {
+      prog = false;
+      for (const e of cEdges) {
+        const s = solved.get(e.id);
+        if (nv[e.u] !== undefined && nv[e.v] === undefined) {
+          nv[e.v] = Math.max(0, Math.min(vin, nv[e.u] > vin / 2 ? nv[e.u] - s.v : nv[e.u] + s.v));
+          prog = true;
+        } else if (nv[e.v] !== undefined && nv[e.u] === undefined) {
+          nv[e.u] = Math.max(0, Math.min(vin, nv[e.v] > vin / 2 ? nv[e.v] - s.v : nv[e.v] + s.v));
+          prog = true;
+        }
+      }
+    }
+    return { ok: true, req, itot, steps, solved, nv };
+  }
+
+  const meshNodes = [...new Set(blocks.flatMap(b => [b.u, b.v]))].filter(n => n !== "Vin" && n !== "GND");
+  return {
+    ok: false,
+    steps,
+    msg: `Logic check failed: topology is not purely series–parallel (bridge or mesh across ${meshNodes.join(", ") || "terminals"}). Remove or move a cross-link to reduce.`
+  };
+}
+
 function solve() {
-  const m = $("mode").value, vin = val("vin"), rate = val("rate") / 1e3, t = (val("tol") || 0) / 100, tg = val("tgt"), R = ["r1", "r2", "r3", "r4"].map(pos), it = [], W = [], rows = [];
-  if (!(vin > 0) || !(R[0] > 0) || !(R[1] > 0)) return null;
+  const m = $("mode").value, vin = val("vin"), rate = val("rate") / 1e3, t = (val("tol") || 0) / 100, tg = val("tgt");
+  const R = ["r1", "r2", "r3", "r4"].map(pos), it = [], W = [], rows = [];
+  if (!(vin > 0)) return null;
+
+  if (m === "cus") {
+    const red = reduceCustom(vin);
+    if (!red.ok) {
+      cEdges.forEach(e => it.push([e.id, `${e.u}–${e.v}`, e.k * 1e3, NaN, NaN, NaN, false, `ce_${e.id}`]));
+      W.push(red.msg);
+      return {
+        m, vin, it, W, rows: [["Topology check", "Failed (not series–parallel)"], ["Active nodes", cNodes.join(", ")]],
+        out: { big: ["Equivalent resistance", "Not reducible"], l2: "Total current", b2: "–", l3: "Total power", b3: "–" },
+        steps: red.steps || []
+      };
+    }
+    cEdges.forEach(e => {
+      const s = red.solved.get(e.id), p = s.p, ov = p > rate;
+      if (ov) W.push(`${e.id} dissipates ${fp(p)}, above the ${fp(rate)} rating.`);
+      it.push([e.id, `${e.u}–${e.v}`, e.k * 1e3, s.v, s.i, p, ov, `ce_${e.id}`]);
+    });
+    const pmax = Math.max(...it.map(x => x[5]));
+    rows.push(["Topology check", `Valid series–parallel (${red.steps.length} step${red.steps.length === 1 ? "" : "s"})`], ["Req nearest standard", fr(near(red.req))]);
+    Object.entries(red.nv).forEach(([n, v]) => { if (n !== "Vin" && n !== "GND") rows.push([`Node ${n} voltage`, fmt(v, 3) + " V"]); });
+    if (pmax > 0 && rate > 0) rows.push(["Peak dissipation / rating", `${fp(pmax)} / ${fp(rate)} (${fmt(rate / pmax, 1)}×)`]);
+    return {
+      m, vin, it, W, rows, steps: red.steps,
+      out: { big: ["Equivalent resistance", fr(red.req)], l2: "Total current", b2: fi(red.itot), l3: "Total power", b3: fp(vin * red.itot) }
+    };
+  }
+
+  if (!(R[0] > 0) || !(R[1] > 0)) return null;
   let out;
   if (m === "div") {
     const [r1, r2, rl] = R, hasL = rl > 0, vf = (a, b, c) => { const rb = c > 0 ? b * c / (b + c) : b; return vin * rb / (a + rb); };
     const rbot = hasL ? r2 * rl / (r2 + rl) : r2;
     const vo0 = vf(r1, r2, NaN), vo = vf(r1, r2, rl), i1 = (vin - vo) / r1, rth = r1 * r2 / (r1 + r2), err = (vo - vo0) / vo0 * 100;
     const vs = [-1, 1].map(s => vf(r1 * (1 + s * t), r2 * (1 - s * t), rl * (1 - s * t)));
-    it.push(["R1", r1, vin - vo, i1], ["R2", r2, vo, vo / r2]); if (hasL) it.push(["RL", rl, vo, vo / rl]);
+    it.push(["R1", "Vin–Vout", r1, vin - vo, i1], ["R2", "Vout–GND", r2, vo, vo / r2]);
+    if (hasL) it.push(["RL", "Vout–GND", rl, vo, vo / rl]);
     out = { big: ["Vout" + (hasL ? " (loaded)" : ""), fmt(vo, 3) + " V"], l2: "Ratio Vout / Vin", b2: fmt(vo / vin, 4), l3: "Supply current", b3: fi(i1) };
     rows.push(["Unloaded Vout", fmt(vo0, 3) + " V"], ["Loading error", hasL ? fmt(err, 2) + " %" : "no load"], ["Input resistance Rin", fr(r1 + rbot)], ["Thévenin Vth / Rth", fmt(vo0, 3) + " V / " + fr(rth)], ["Vout over tolerance", t > 0 ? fmt(Math.min(...vs), 3) + " – " + fmt(Math.max(...vs), 3) + " V" : "nominal (0% tol)"]);
     if (tg > 0 && tg < vin) {
       const rbReq = r1 * tg / (vin - tg), x1 = rbot * (vin - tg) / tg, s1 = near(x1), v1 = vf(s1, r2, rl);
       if (hasL && rl <= rbReq) {
-        rows.push(["R2 for target" + (hasL ? " (loaded)" : ""), "unreachable with this RL"]);
+        rows.push(["R2 for target (loaded)", "unreachable with this RL"]);
       } else {
         const x2 = hasL ? rbReq * rl / (rl - rbReq) : rbReq, s2 = near(x2), v2 = vf(r1, s2, rl);
         rows.push(["R2 for target (exact / standard)", fr(x2) + " / " + fr(s2)], ["Vout with standard R2", fmt(v2, 3) + " V (" + fmt((v2 - tg) / tg * 100, 2) + " %)"]);
@@ -112,68 +372,306 @@ function solve() {
   } else {
     const a = R.filter(x => x > 0);
     if (m === "ser") {
-      const req = a.reduce((s, x) => s + x, 0), i = vin / req; a.forEach((r, n) => it.push(["R" + (n + 1), r, i * r, i]));
+      const req = a.reduce((s, x) => s + x, 0), i = vin / req;
+      a.forEach((r, n) => it.push(["R" + (n + 1), "series", r, i * r, i]));
       out = { big: ["Equivalent resistance", fr(req)], l2: "Total current", b2: fi(i), l3: "Total power", b3: fp(vin * i) };
       rows.push(["Resistors in series", a.length], ["Req nearest standard", fr(near(req))], ["Drop across each, relative", a.map(r => fmt(r / req * 100, 1) + "%").join(" / ")]);
     } else {
-      const g = a.reduce((s, x) => s + 1 / x, 0), req = 1 / g; a.forEach((r, n) => it.push(["R" + (n + 1), r, vin, vin / r]));
+      const g = a.reduce((s, x) => s + 1 / x, 0), req = 1 / g;
+      a.forEach((r, n) => it.push(["R" + (n + 1), "Vin–GND", r, vin, vin / r]));
       out = { big: ["Equivalent resistance", fr(req)], l2: "Total current", b2: fi(vin * g), l3: "Total power", b3: fp(vin * vin * g) };
       rows.push(["Resistors in parallel", a.length], ["Req nearest standard", fr(near(req))], ["Current share of each", a.map(r => fmt(req / r * 100, 1) + "%").join(" / ")]);
     }
   }
   let pmax = 0;
-  it.forEach(x => { const p = x[2] * x[3]; pmax = Math.max(pmax, p); x.push(p, p > rate); if (p > rate) W.push(`${x[0]} dissipates ${fp(p)}, above the ${fp(rate)} rating.`); });
+  it.forEach((x, idx) => {
+    const p = x[3] * x[4];
+    pmax = Math.max(pmax, p);
+    x.push(p, p > rate, "r" + (idx + 1));
+    if (p > rate) W.push(`${x[0]} dissipates ${fp(p)}, above the ${fp(rate)} rating.`);
+  });
   if (pmax > 0 && rate > 0) rows.push(["Peak dissipation / rating", `${fp(pmax)} / ${fp(rate)} (${fmt(rate / pmax, 1)}×)`]);
-  return { m, vin, it, W, rows, out, a: R };
+  return { m, vin, it, W, rows, out, steps: [] };
+}
+
+// Optimized multi-node & parallel-lane schematic renderer for Custom mode
+function drawCustom(vin) {
+  const svg = $("sch");
+  // 1. Compute hop distances from Vin and GND for topological X rank
+  const adj = {};
+  cNodes.forEach(n => { adj[n] = []; });
+  cEdges.forEach(e => { if (adj[e.u] && adj[e.v]) { adj[e.u].push(e.v); adj[e.v].push(e.u); } });
+  const bfs = start => {
+    const d = { [start]: 0 }, q = [start];
+    while (q.length) {
+      const u = q.shift();
+      for (const v of (adj[u] || [])) if (d[v] === undefined) { d[v] = d[u] + 1; q.push(v); }
+    }
+    return d;
+  };
+  const dIn = bfs("Vin"), dGnd = bfs("GND");
+  const pos = {};
+  const cols = new Map();
+  cNodes.forEach((n, idx) => {
+    let t;
+    if (n === "Vin") t = 0;
+    else if (n === "GND") t = 1;
+    else if (dIn[n] !== undefined && dGnd[n] !== undefined) t = dIn[n] / (dIn[n] + dGnd[n]);
+    else t = 0.2 + 0.6 * ((idx % 4) / 3);
+    const key = Math.round(t * 100);
+    if (!cols.has(key)) cols.set(key, []);
+    cols.get(key).push({ n, t });
+  });
+
+  const sortedCols = [...cols.entries()].sort((a, b) => a[0] - b[0]);
+  const spanX = Math.max(250, (sortedCols.length - 1) * 96);
+  const x0 = 42, yMid = 110;
+  let maxVert = 1;
+  sortedCols.forEach(([, list]) => { maxVert = Math.max(maxVert, list.length); });
+  const spanY = Math.max(110, (maxVert - 1) * 74);
+
+  sortedCols.forEach(([, list], ci) => {
+    const x = sortedCols.length === 1 ? x0 : x0 + (ci / (sortedCols.length - 1)) * spanX;
+    list.forEach((item, ri) => {
+      const y = list.length === 1 ? yMid : yMid + (ri - (list.length - 1) / 2) * (spanY / Math.max(1, list.length - 1));
+      pos[item.n] = { x, y };
+    });
+  });
+
+  // 2. Group parallel edges sharing the same unordered endpoints so lanes never overlap
+  const pairGroups = new Map();
+  cEdges.forEach(e => {
+    const k = e.u < e.v ? `${e.u}|${e.v}` : `${e.v}|${e.u}`;
+    if (!pairGroups.has(k)) pairGroups.set(k, []);
+    pairGroups.get(k).push(e);
+  });
+
+  let h = "", minX = x0 - 34, maxX = x0 + spanX + 38, minY = yMid - 72, maxY = yMid + 76;
+  const track = (x, y) => { minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); };
+
+  for (const grp of pairGroups.values()) {
+    const e0 = grp[0], a = pos[e0.u], b = pos[e0.v];
+    if (!a || !b) continue;
+    const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy) || 1;
+    const ux = dx / L, uy = dy / L, nx = -uy, ny = ux;
+    const m = grp.length, step = m > 1 ? Math.min(30, 82 / (m - 1)) : 0;
+
+    grp.forEach((e, idx) => {
+      const off = (idx - (m - 1) / 2) * step;
+      const side = off === 0 ? -1 : Math.sign(off);
+      const ax = a.x + nx * off, ay = a.y + ny * off;
+      const bx = b.x + nx * off, by = b.y + ny * off;
+      const mx = (ax + bx) / 2, my = (ay + by) / 2;
+      let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      if (ang > 90 || ang < -90) ang += 180;
+      const rad = ang * Math.PI / 180;
+      const lnx = -Math.sin(rad), lny = Math.cos(rad);
+      const ldist = off === 0 ? -13 : side * 13;
+      const lx = mx + lnx * ldist, ly = my + lny * ldist + 3.5;
+
+      track(mx - 24, my - 24); track(mx + 24, my + 24);
+      track(lx - 26, ly - 10); track(lx + 26, ly + 10);
+
+      // Lead wires from node centers to parallel lane + zigzag resistor body
+      const z0x = mx - ux * 16, z0y = my - uy * 16;
+      const z1x = mx + ux * 16, z1y = my + uy * 16;
+      const leads = off === 0
+        ? `M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${z0x.toFixed(1)} ${z0y.toFixed(1)}M${z1x.toFixed(1)} ${z1y.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`
+        : `M${a.x.toFixed(1)} ${a.y.toFixed(1)}L${ax.toFixed(1)} ${ay.toFixed(1)}L${z0x.toFixed(1)} ${z0y.toFixed(1)}M${z1x.toFixed(1)} ${z1y.toFixed(1)}L${bx.toFixed(1)} ${by.toFixed(1)}L${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
+      const lbl = `${e.id} ${fr(e.k * 1e3)}`;
+      h += `<g class="rgrp" data-focus="ce_${e.id}">` +
+        `<path class="w" d="${leads}"/>` +
+        `<g transform="translate(${mx.toFixed(1)},${my.toFixed(1)}) rotate(${ang.toFixed(1)})"><path class="w" d="M-16 0H-11L-8.2 -5L-2.8 5L2.8 -5L8.2 5L11 0H16"/></g>` +
+        `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}">${lbl}</text>` +
+        `</g>`;
+    });
+  }
+
+  // 3. Draw clickable nodes on top of wires
+  cNodes.forEach(n => {
+    const p = pos[n], isTerm = n === "Vin" || n === "GND", isSel = selNode === n;
+    track(p.x - 24, p.y - 24); track(p.x + 24, p.y + 24);
+    let extra = "";
+    if (n === "Vin") extra = `<text x="${p.x}" y="${p.y - 12}">Vin ${fmt(vin, 2)}V</text>`;
+    else if (n === "GND") { extra = gnd(p.x, p.y + 6) + `<text x="${p.x}" y="${p.y - 11}">GND</text>`; track(p.x, p.y + 22); }
+    else extra = `<text x="${p.x}" y="${p.y - 11}">${n}</text>`;
+    h += `<g class="nd${isTerm ? " term" : ""}${isSel ? " sel" : ""}" data-node="${n}" role="button" tabindex="0" aria-label="Node ${n}">` +
+      `<circle class="hit" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="15"/>` +
+      `<circle class="core" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${isTerm ? 4.4 : 4.2}"/>` +
+      extra + `</g>`;
+  });
+
+  svg.setAttribute("viewBox", `${minX.toFixed(0)} ${minY.toFixed(0)} ${(maxX - minX).toFixed(0)} ${(maxY - minY).toFixed(0)}`);
+  svg.innerHTML = h;
 }
 
 function draw(s) {
-  const { m, it, vin } = s, hasL = m === "div" && it.length > 2, T = (x, y) => `<text x="${x}" y="${y}">Vin ${fmt(vin, 2)}V</text>`;
+  const { m, it, vin } = s;
+  if (m === "cus") { drawCustom(vin); return; }
+  $("sch").setAttribute("viewBox", "0 0 320 210");
+  const hasL = m === "div" && it.length > 2, T = (x, y) => `<text x="${x}" y="${y}">Vin ${fmt(vin, 2)}V</text>`;
   let h = "";
   if (m === "div") {
-    h = dot(60, 20) + T(60, 12) + wire("M60 20V40M60 80V120M60 160V176") + gnd(60, 176) + res(60, 60, 90, "R1 " + fr(it[0][1]), 80, 64, 1) + res(60, 140, 90, "R2 " + fr(it[1][1]), 80, 144, 1) + `<path class="w out" d="M60 100H250"/>` + dot(60, 100) + dot(250, 100) + `<text x="250" y="90">Vout</text>`;
-    if (hasL) h += dot(170, 100) + wire("M170 100V120M170 160V176") + gnd(170, 176) + res(170, 140, 90, "RL " + fr(it[2][1]), 190, 144, 1);
+    h = dot(60, 20) + T(60, 12) + wire("M60 20V40M60 80V120M60 160V176") + gnd(60, 176) +
+      res(60, 60, 90, "R1 " + fr(it[0][2]), 80, 64, "l", "r1") +
+      res(60, 140, 90, "R2 " + fr(it[1][2]), 80, 144, "l", "r2") +
+      `<path class="w out" d="M60 100H250"/>` + dot(60, 100) + dot(250, 100) + `<text x="250" y="90">Vout</text>`;
+    if (hasL) h += dot(170, 100) + wire("M170 100V120M170 160V176") + gnd(170, 176) + res(170, 140, 90, "RL " + fr(it[2][2]), 190, 144, "l", "r3");
   } else if (m === "ser") {
     const n = it.length, y = 96;
     h = dot(18, y) + `<text x="24" y="${y - 9}">Vin ${fmt(vin, 2)}V</text>` + wire(`M18 ${y}H40`);
-    it.forEach((x, i) => { const cx = 60 + i * 62; h += res(cx, y, 0, x[0] + " " + fr(x[1]), cx, y - 16) + (i < n - 1 ? wire(`M${cx + 20} ${y}H${cx + 42}`) : ""); });
+    it.forEach((x, i) => {
+      const cx = 60 + i * 62;
+      h += res(cx, y, 0, x[0] + " " + fr(x[2]), cx, y - 16, "", x[7]) + (i < n - 1 ? wire(`M${cx + 20} ${y}H${cx + 42}`) : "");
+    });
     const gx = 60 + (n - 1) * 62 + 38;
     h += wire(`M${gx - 18} ${y}H${gx}V${y + 22}`) + gnd(gx, y + 22);
   } else {
     const n = it.length;
     h = dot(18, 30) + `<text x="24" y="21">Vin ${fmt(vin, 2)}V</text>` + wire(`M18 30H${60 + (n - 1) * 62}M18 170H${60 + (n - 1) * 62}M18 170V176`) + gnd(18, 176);
-    it.forEach((x, i) => { const cx = 60 + i * 62; h += wire(`M${cx} 30V80M${cx} 120V170`) + res(cx, 100, 90, x[0] + " " + fr(x[1]), cx + 12, 104, 1) + dot(cx, 30) + dot(cx, 170); });
+    it.forEach((x, i) => {
+      const cx = 60 + i * 62;
+      h += wire(`M${cx} 30V80M${cx} 120V170`) + res(cx, 100, 90, x[0] + " " + fr(x[2]), cx + 12, 104, "l", x[7]) + dot(cx, 30) + dot(cx, 170);
+    });
   }
   $("sch").innerHTML = h;
 }
 
 function setMode() {
-  const m = $("mode").value, d = m === "div";
-  const set = (id, v) => { $(id).value = v; };
-  set("r1", d ? 10 : 1); set("r2", d ? 3.3 : 2.2); set("r3", d ? "" : 3.3); set("r4", "");
-  $("l1").textContent = d ? "R1 top (kΩ)" : "R1 (kΩ)"; $("lr2").textContent = d ? "R2 bottom (kΩ)" : "R2 (kΩ)";
-  $("lr3").textContent = d ? "Load RL (kΩ, optional)" : "R3 (kΩ, optional)";
-  $("L4").hidden = d; $("Lt").hidden = $("Lg").hidden = !d;
-  $("r1").previousElementSibling.dataset.tip = d ? "Top divider resistor, from Vin to the output node." : "First resistor in the network.";
-  $("r2").previousElementSibling.dataset.tip = d ? "Bottom divider resistor, from the output node to ground." : "Second resistor in the network.";
-  $("r3").previousElementSibling.dataset.tip = d ? "Optional load resistance from the output to ground. Leave blank for no load." : "Optional third resistor. Leave blank to leave it out.";
+  const m = $("mode").value, d = m === "div", c = m === "cus";
+  selNode = null;
+  ["L1", "L2", "L3"].forEach(id => { $(id).hidden = c; });
+  $("L4").hidden = d || c;
+  $("Lt").hidden = $("Lg").hidden = !d;
+  $("cbox").hidden = !c;
+  $("thn").hidden = !c;
+
+  if (!c) {
+    const set = (id, v) => { $(id).value = v; };
+    set("r1", d ? 10 : 1); set("r2", d ? 3.3 : 2.2); set("r3", d ? "" : 3.3); set("r4", "");
+    $("l1").textContent = d ? "R1 top (kΩ)" : "R1 (kΩ)"; $("lr2").textContent = d ? "R2 bottom (kΩ)" : "R2 (kΩ)";
+    $("lr3").textContent = d ? "Load RL (kΩ, optional)" : "R3 (kΩ, optional)";
+    $("r1").previousElementSibling.dataset.tip = d ? "Top divider resistor, from Vin to the output node." : "First resistor in the network.";
+    $("r2").previousElementSibling.dataset.tip = d ? "Bottom divider resistor, from the output node to ground." : "Second resistor in the network.";
+    $("r3").previousElementSibling.dataset.tip = d ? "Optional load resistance from the output to ground. Leave blank for no load." : "Optional third resistor. Leave blank to leave it out.";
+    $("snot").textContent = "Ideal source and resistors. Click any resistor on the schematic to edit its value directly.";
+  } else {
+    syncCustomControls();
+    $("snot").textContent = "Click any two nodes on the schematic to wire a resistor between them, or click a resistor to edit its value.";
+  }
   update();
 }
+
 function update() {
   const s = solve();
   if (!s) { $("gwarn").innerHTML = '<div class="pw">Enter a positive Vin, R1 and R2.</div>'; return; }
-  const o = s.out;
+  const o = s.out, isCus = s.m === "cus";
   $("bl").textContent = o.big[0]; $("bv").textContent = o.big[1]; $("l2").textContent = o.l2; $("b2").textContent = o.b2; $("l3").textContent = o.l3; $("b3").textContent = o.b3;
-  $("per").innerHTML = s.it.map(x => `<tr><td>${x[0]}</td><td>${fr(x[1])}</td><td>${fmt(x[2], 3)} V</td><td>${fi(x[3])}</td><td${x[5] ? ' class="ov"' : ""}>${fp(x[4])}</td></tr>`).join("");
+  $("per").innerHTML = s.it.map(x =>
+    `<tr><td>${x[0]}</td>${isCus ? `<td>${x[1]}</td>` : ""}<td><input class="iv" type="number" data-sync="${x[7]}" value="${+(x[2] / 1e3).toPrecision(6)}" step="any" min="0.001" max="1e6" aria-label="${x[0]} resistance in kΩ"></td><td>${isFinite(x[3]) ? fmt(x[3], 3) + " V" : "–"}</td><td>${isFinite(x[4]) ? fi(x[4]) : "–"}</td><td${x[6] ? ' class="ov"' : ""}>${isFinite(x[5]) ? fp(x[5]) : "–"}</td></tr>`
+  ).join("");
   $("res").innerHTML = s.rows.map(x => `<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
+  if (s.steps && s.steps.length) {
+    $("steps").hidden = false;
+    $("steps").innerHTML = `<small>Series / parallel simplification steps</small><ol>${s.steps.map(st => `<li>${st}</li>`).join("")}</ol>`;
+  } else {
+    $("steps").hidden = true;
+  }
   $("gwarn").innerHTML = s.W.length ? s.W.map(t => `<div class="pw">${t}</div>`).join("") : '<div class="pok">No warnings.</div>';
   draw(s);
 }
+
+// Custom builder interactions
+$("badd").addEventListener("click", () => {
+  const u = $("nfrom").value, v = $("nto").value, k = parseFloat($("nrval").value);
+  if (!u || !v || u === v || !(k > 0)) return;
+  cEdges.push({ id: nextEdgeId(), u, v, k });
+  selNode = null;
+  syncCustomControls();
+  update();
+});
+$("bnd").addEventListener("click", () => {
+  const used = new Set(cNodes);
+  for (let i = 1; ; i++) {
+    const nm = "N" + i;
+    if (!used.has(nm)) { cNodes.splice(cNodes.length - 1, 0, nm); break; }
+  }
+  syncCustomControls();
+  update();
+});
+$("brmnd").addEventListener("click", () => {
+  if (cNodes.length <= 2) return;
+  const rem = cNodes[cNodes.length - 2];
+  cNodes = cNodes.filter(n => n !== rem);
+  cEdges = cEdges.filter(e => e.u !== rem && e.v !== rem);
+  if (selNode === rem) selNode = null;
+  syncCustomControls();
+  update();
+});
+$("cbox").addEventListener("click", e => {
+  const pre = e.target.closest("[data-pre]");
+  if (pre) { loadPreset(pre.dataset.pre); return; }
+  const del = e.target.closest("[data-del]");
+  if (del) {
+    cEdges.splice(+del.dataset.del, 1);
+    syncCustomControls();
+    update();
+  }
+});
+$("clist").addEventListener("input", e => {
+  const inp = e.target.closest("input[data-idx]");
+  if (!inp) return;
+  cEdges[+inp.dataset.idx].k = parseFloat(inp.value);
+  update();
+});
+
+// Direct value sync from the Per-Resistor table
+$("per").addEventListener("input", e => {
+  const inp = e.target.closest("input[data-sync]");
+  if (!inp) return;
+  const target = $(inp.dataset.sync);
+  if (target) {
+    target.value = inp.value;
+    target.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+});
+
+// Schematic click: select two nodes to wire a resistor, or click a resistor to focus its value input
+$("sch").addEventListener("click", e => {
+  const nd = e.target.closest("[data-node]");
+  if (nd && $("mode").value === "cus") {
+    const n = nd.dataset.node;
+    if (!selNode) {
+      selNode = n;
+      $("snot").textContent = `Selected ${n} — click a second node to place a resistor, or click ${n} again to cancel.`;
+      drawCustom(val("vin"));
+    } else if (selNode === n) {
+      selNode = null;
+      $("snot").textContent = "Click any two nodes on the schematic to wire a resistor between them, or click a resistor to edit its value.";
+      drawCustom(val("vin"));
+    } else {
+      const k = parseFloat($("nrval").value) || 4.7;
+      cEdges.push({ id: nextEdgeId(), u: selNode, v: n, k });
+      $("nfrom").value = selNode; $("nto").value = n;
+      selNode = null;
+      $("snot").textContent = "Click any two nodes on the schematic to wire a resistor between them, or click a resistor to edit its value.";
+      syncCustomControls();
+      update();
+    }
+    return;
+  }
+  const rg = e.target.closest("[data-focus]");
+  if (rg) {
+    const el = $(rg.dataset.focus);
+    if (el) { el.focus(); el.select(); }
+  }
+});
+
 $("mode").addEventListener("change", setMode); $("eser").addEventListener("change", update);
-document.querySelectorAll("main input").forEach(el => el.addEventListener("input", update));
+document.querySelectorAll("main > .layout > .card > .pgrid input").forEach(el => el.addEventListener("input", update));
 clampInputs("main input[type=number]", update);
 initTips({
-  mode: "A loaded voltage divider, a series string of up to four resistors, or a parallel bank of up to four.",
+  mode: "A loaded voltage divider, series string, parallel bank, or a custom multi-node network with series/parallel logic checking.",
   vin: "Source voltage across the whole network.",
   r1: "Top divider resistor, from Vin to the output node.",
   r2: "Bottom divider resistor, from the output node to ground.",
