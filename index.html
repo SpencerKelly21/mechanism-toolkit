@@ -155,8 +155,6 @@ a.tile:hover,a.tile:focus-visible{transform:translate(-3px,-3px);box-shadow:5px 
 <a class="tile" href="cantilever.html" style="--c:var(--cant)"><span class="fig">FIG. 06</span><svg class="ico" viewBox="0 0 64 64" data-icon="cant"></svg><h2>Cantilever beam</h2><p>Bending stress, safety factor, tip deflection, and shear, moment and deflection graphs.</p><span class="go">Open →</span></a>
 <div class="tile soon" style="--c:#e5484d"><span class="fig">FIG. 07</span><svg class="ico" viewBox="0 0 64 64" data-icon="motor"></svg><h2>Motor sizing</h2><p>Motion profile, reflected inertia and RMS torque.</p><span class="go">Planned</span></div>
 <a class="tile" href="op-amps.html" style="--c:#4fb3e8"><span class="fig">FIG. 08</span><svg class="ico" viewBox="0 0 64 64" data-icon="amp"></svg><h2>Op-amp circuits</h2><p>Inverting, summing, difference, integrator and filters, with gain, bandwidth and a Bode plots.</p><span class="go">Open →</span></a>
-<a class="tile" href="resistor-network.html" style="--c:#b8895a"><span class="fig">FIG. 09</span><svg class="ico" viewBox="0 0 64 64" data-icon="rnet"></svg><h2>Resistor networks</h2><p>Loaded dividers, series and parallel circuits, Th&eacute;venin, and tolerances.</p><span class="go">Open →</span></a>
-</div>
 <footer class="tb"><div class="hl"><span>Title</span>Mechanism Toolkit</div><div><span>Drawing no.</span>MT-001</div><div><span>Scale</span>1 : 1</div><div><span>By</span>SK</div></footer>
 </div>
 </main>
@@ -281,8 +279,6 @@ const ICONS = {
   cant: () => `<path d="M10 30H54" ${line} stroke-dasharray="2 3" opacity=".45"/><path d="M10 16V44M10 20L5 25M10 26L5 31M10 32L5 37M10 38L5 43" ${line}/><path class="cb" ${line}/><path class="ca" style="stroke-width:1.5" ${line}/>`,
   // Op-amp: centred triangle with − and + inside, symmetric leads, and pulses aligned to the lead spans on hover.
   amp: () => `<path d="M18 10V54L50 32Z" ${line}/><path d="M23 22H29M23 42H29M26 39V45" ${line} style="stroke-width:1.6"/><path d="M6 22H18M6 42H18M50 32H60" ${line}/><circle class="pu" style="--d:10px" cx="7" cy="22" r="2" fill="currentColor"/><circle class="pu" style="--d:10px;animation-delay:.3s" cx="7" cy="42" r="2" fill="currentColor"/><circle class="pu" style="--d:9px;animation-delay:.85s" cx="51" cy="32" r="2" fill="currentColor"/>`,
-  // Voltage divider: centred spine, symmetric 4-peak resistors, clear stems at the tap and ground, and a hover pulse on the tap wire.
-  rnet: () => `<circle cx="22" cy="6.5" r="2.5" ${line} style="stroke-width:1.6"/><path d="M22 9V12.5L16.5 14.375L27.5 18.125L16.5 21.875L27.5 25.625L22 27.5V36.5L16.5 38.375L27.5 42.125L16.5 45.875L27.5 49.625L22 51.5V55M14 55H30M17 58.2H27M20 61.4H24" ${line}/><path d="M22 32H49.5" ${line}/><circle cx="22" cy="32" r="2.4" fill="currentColor"/><circle cx="52" cy="32" r="2.5" ${line} style="stroke-width:1.6"/><circle class="pu" style="--d:25px" cx="24" cy="32" r="2" fill="currentColor"/>`,
   motor: () => `<path d="M10 8V54H58" ${line}/><path d="M10 18H34L54 48" ${line} stroke-dasharray="4 3"/>`
 };
 {
